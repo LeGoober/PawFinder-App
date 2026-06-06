@@ -1,0 +1,55 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: pawfinder-notification-service
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASS:guest}
+    listener:
+      simple:
+        concurrency: 3
+        max-concurrency: 10
+        prefetch: 5
+
+jwt:
+  secret: ${JWT_SECRET:your_256_bit_secret_key_here_change_in_production}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+rabbitmq:
+  queue:
+    notification: pawfinder.notification.queue
+  exchange:
+    notification: pawfinder.notification.exchange
+  routing-key:
+    notification: pawfinder.notification.routingkey
+
+# Twilio
+twilio:
+  account-sid: ${TWILIO_ACCOUNT_SID:your_account_sid}
+  auth-token: ${TWILIO_AUTH_TOKEN:your_auth_token}
+  phone-number: ${TWILIO_PHONE_NUMBER:+1234567890}
+
+# SendGrid
+sendgrid:
+  api-key: ${SENDGRID_API_KEY:SG.change_me}
+
+# Firebase Cloud Messaging
+firebase:
+  server-key: ${FIREBASE_SERVER_KEY:your_fcm_server_key}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.pawfinder.notification: DEBUG

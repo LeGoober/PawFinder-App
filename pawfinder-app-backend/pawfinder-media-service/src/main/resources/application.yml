@@ -1,0 +1,35 @@
+server:
+  port: 8085
+
+spring:
+  application:
+    name: pawfinder-media-service
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 25MB
+
+jwt:
+  secret: ${JWT_SECRET:your_256_bit_secret_key_here_change_in_production}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  access-key-id: ${AWS_ACCESS_KEY_ID:your_access_key}
+  secret-access-key: ${AWS_SECRET_ACCESS_KEY:your_secret_key}
+  s3:
+    bucket: ${AWS_S3_BUCKET:pawfinder-media-dev}
+    presigned-url-expiration-minutes: 15
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.pawfinder.media: DEBUG

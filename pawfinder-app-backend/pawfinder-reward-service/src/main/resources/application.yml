@@ -1,0 +1,42 @@
+server:
+  port: 8084
+
+spring:
+  application:
+    name: pawfinder-reward-service
+  datasource:
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/pawfinder}
+    username: ${POSTGRES_USER:pawfinder}
+    password: ${POSTGRES_PASSWORD:pawfinder_dev}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  flyway:
+    enabled: false
+
+jwt:
+  secret: ${JWT_SECRET:your_256_bit_secret_key_here_change_in_production}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+stripe:
+  secret-key: ${STRIPE_SECRET_KEY:sk_test_change_me}
+  publishable-key: ${STRIPE_PUBLISHABLE_KEY:pk_test_change_me}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:whsec_change_me}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    com.pawfinder.reward: DEBUG
