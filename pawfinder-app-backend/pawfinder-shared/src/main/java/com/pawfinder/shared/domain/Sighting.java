@@ -2,7 +2,8 @@ package com.pawfinder.shared.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
@@ -34,7 +35,7 @@ public class Sighting {
     @Column(name = "finder_id", insertable = false, updatable = false)
     private UUID finderId;
 
-    @Type(value = org.hibernate.spatial.JTSGeometryType.class)
+    @JdbcTypeCode(SqlTypes.GEOGRAPHY)
     @Column(name = "location", columnDefinition = "GEOGRAPHY(Point,4326)")
     private Point location;
 

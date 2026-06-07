@@ -2,7 +2,8 @@ package com.pawfinder.alert.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
 import java.math.BigDecimal;
@@ -32,7 +33,7 @@ public class Alert {
     private String status = "active";
 
     @Column(name = "last_seen_location", columnDefinition = "GEOGRAPHY(Point,4326)")
-    @Type(org.hibernate.spatial.JTSGeometryType.class)
+    @JdbcTypeCode(SqlTypes.GEOGRAPHY)
     private Point lastSeenLocation;
 
     @Column(name = "last_seen_address", columnDefinition = "TEXT")

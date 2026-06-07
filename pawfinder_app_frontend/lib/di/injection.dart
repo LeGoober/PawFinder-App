@@ -1,0 +1,36 @@
+import 'package:get_it/get_it.dart';
+import 'package:pawfinder_app/data/datasources/remote/api_client.dart';
+import 'package:pawfinder_app/data/repositories/alert_repository_impl.dart';
+import 'package:pawfinder_app/data/repositories/auth_repository_impl.dart';
+import 'package:pawfinder_app/data/repositories/conversation_repository_impl.dart';
+import 'package:pawfinder_app/data/repositories/sighting_repository_impl.dart';
+import 'package:pawfinder_app/domain/repositories/alert_repository.dart';
+import 'package:pawfinder_app/domain/repositories/auth_repository.dart';
+import 'package:pawfinder_app/domain/repositories/conversation_repository.dart';
+import 'package:pawfinder_app/domain/repositories/sighting_repository.dart';
+import 'package:pawfinder_app/services/analytics_service.dart';
+import 'package:pawfinder_app/services/auth_service.dart';
+import 'package:pawfinder_app/services/location_service.dart';
+import 'package:pawfinder_app/services/notification_service.dart';
+
+final getIt = GetIt.instance;
+
+Future<void> configureDependencies() async {
+  // Services
+  final authService = AuthService();
+  await authService.initialize();
+  getIt.registerLazySingleton<AuthService>(() => authService);
+
+  getIt.registerLazySingleton<LocationService>(() => LocationService());
+  getIt.registerLazySingleton<NotificationService>(() => NotificationService());
+  getIt.registerLazySingleton<AnalyticsService>(() => AnalyticsService());
+
+  // Data sources
+  getIt.registerLazySingleton<ApiClient>(() => ApiClient(authService: getIt<AuthService>()));
+
+  // Repositories
+  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
+  getIt.registerLazySingleton<AlertRepository>(() => AlertRepositoryImpl());
+  getIt.registerLazySingleton<SightingRepository>(() => SightingRepositoryImpl());
+  getIt.registerLazySingleton<ConversationRepository>(() => ConversationRepositoryImpl());
+}

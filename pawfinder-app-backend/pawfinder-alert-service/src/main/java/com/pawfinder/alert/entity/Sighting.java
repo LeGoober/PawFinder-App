@@ -2,7 +2,8 @@ package com.pawfinder.alert.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Type;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.Point;
 
 import java.time.LocalDateTime;
@@ -27,7 +28,7 @@ public class Sighting {
     private UUID finderId;
 
     @Column(columnDefinition = "GEOGRAPHY(Point,4326)")
-    @Type(org.hibernate.spatial.JTSGeometryType.class)
+    @JdbcTypeCode(SqlTypes.GEOGRAPHY)
     private Point location;
 
     @Column(name = "photo_urls", columnDefinition = "jsonb")

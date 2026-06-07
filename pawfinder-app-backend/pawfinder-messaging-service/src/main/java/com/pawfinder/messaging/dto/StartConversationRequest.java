@@ -3,6 +3,8 @@ package com.pawfinder.messaging.dto;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.util.UUID;
+
 @Data
 @Builder
 @NoArgsConstructor
