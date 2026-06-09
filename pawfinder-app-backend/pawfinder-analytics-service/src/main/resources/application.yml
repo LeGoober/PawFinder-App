@@ -5,7 +5,7 @@ spring:
   application:
     name: pawfinder-analytics-service
   datasource:
-    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/pawfinder}
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5433/pawfinder}
     username: ${POSTGRES_USER:pawfinder}
     password: ${POSTGRES_PASSWORD:pawfinder_dev}
     driver-class-name: org.postgresql.Driver
@@ -19,6 +19,9 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    table: flyway_analytics_history
+    baseline-on-migrate: true
+    baseline-version: 0
 
 jwt:
   secret: ${JWT_SECRET:your_256_bit_secret_key_here_change_in_production}

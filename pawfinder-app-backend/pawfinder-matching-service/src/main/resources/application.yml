@@ -5,7 +5,7 @@ spring:
   application:
     name: pawfinder-matching-service
   datasource:
-    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5432/pawfinder}
+    url: ${POSTGRES_URL:jdbc:postgresql://localhost:5433/pawfinder}
     username: ${POSTGRES_USER:pawfinder}
     password: ${POSTGRES_PASSWORD:pawfinder_dev}
     driver-class-name: org.postgresql.Driver

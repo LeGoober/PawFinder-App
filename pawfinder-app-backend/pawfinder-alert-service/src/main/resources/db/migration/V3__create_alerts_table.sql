@@ -3,7 +3,8 @@ CREATE TABLE IF NOT EXISTS alerts (
     pet_id UUID NOT NULL,
     owner_id UUID NOT NULL,
     status VARCHAR(20) DEFAULT 'active',
-    last_seen_location GEOGRAPHY(POINT, 4326),
+    last_seen_latitude DOUBLE PRECISION,
+    last_seen_longitude DOUBLE PRECISION,
     last_seen_address TEXT,
     last_seen_timestamp TIMESTAMP,
     description TEXT,
@@ -17,6 +18,6 @@ CREATE TABLE IF NOT EXISTS alerts (
     resolved_at TIMESTAMP
 );
 
-CREATE INDEX idx_alerts_location ON alerts USING GIST (last_seen_location);
 CREATE INDEX idx_alerts_status ON alerts (status);
 CREATE INDEX idx_alerts_owner ON alerts (owner_id);
+CREATE INDEX idx_alerts_location ON alerts (last_seen_latitude, last_seen_longitude);

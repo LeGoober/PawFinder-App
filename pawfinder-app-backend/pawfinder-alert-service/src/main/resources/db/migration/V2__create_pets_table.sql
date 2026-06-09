@@ -1,5 +1,3 @@
-CREATE EXTENSION IF NOT EXISTS postgis;
-
 CREATE TABLE IF NOT EXISTS pets (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     owner_id UUID NOT NULL,
