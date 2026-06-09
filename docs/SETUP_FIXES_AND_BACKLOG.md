@@ -177,6 +177,26 @@ static const Color rewardDark = reward;
 - [ ] Configure API Gateway route definitions for all upstream services
 - [ ] Add health check dashboard showing all service statuses
 
+### 2.7 Android Build: Core Library Desugaring
+**Issue:** `flutter run` failed on Android emulator with:
+```
+Dependency ':flutter_local_notifications' requires core library desugaring to be enabled
+```
+
+**Fix:** Added to `android/app/build.gradle.kts`:
+```kotlin
+compileOptions {
+    isCoreLibraryDesugaringEnabled = true
+    // ...
+}
+
+dependencies {
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+```
+
+---
+
 ### Infrastructure Notes
 - Docker PostgreSQL uses port **5433** (not 5432 due to Windows service conflict)
 - All services use `POSTGRES_HOST_AUTH_METHOD: trust` for dev (not for production!)
