@@ -2,6 +2,8 @@ package com.pawfinder.shared.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -44,7 +46,8 @@ public class Pet {
     @Column(name = "medical_needs", columnDefinition = "TEXT")
     private String medicalNeeds;
 
-    @Column(columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "JSONB")
     private String photos;
 
     @Column(name = "qr_code_id", unique = true)

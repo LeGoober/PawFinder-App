@@ -39,7 +39,8 @@ public class Sighting {
     @Column(name = "location", columnDefinition = "GEOGRAPHY(Point,4326)")
     private Point location;
 
-    @Column(name = "photo_urls", columnDefinition = "TEXT")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "photo_urls", columnDefinition = "JSONB")
     private String photoUrls;
 
     @Column(columnDefinition = "TEXT")

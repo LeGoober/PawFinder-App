@@ -208,7 +208,6 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primaryDarkMode,
         brightness: Brightness.dark,
@@ -217,22 +216,17 @@ class AppTheme {
         error: AppColors.danger,
         surface: AppColors.cardDark,
       ),
-
       scaffoldBackgroundColor: AppColors.paperDark,
-
       textTheme: typography.apply(
         bodyColor: AppColors.ink900Dark,
         displayColor: AppColors.ink900Dark,
       ),
-
       fontFamily: AppTypography.fontBody,
-
       appBarTheme: const AppBarTheme(
         elevation: 0,
         backgroundColor: AppColors.paperDark,
         foregroundColor: AppColors.ink900Dark,
       ),
-
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primaryDarkMode,
@@ -240,7 +234,6 @@ class AppTheme {
         backgroundColor: AppColors.paperDark,
         elevation: 0,
       ),
-
       cardTheme: CardThemeData(
         elevation: 0,
         color: AppColors.cardDark,
@@ -252,7 +245,6 @@ class AppTheme {
           ),
         ),
       ),
-
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primaryDarkMode,
@@ -264,7 +256,6 @@ class AppTheme {
           elevation: 0,
         ),
       ),
-
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.ink900Dark,
@@ -278,7 +269,6 @@ class AppTheme {
           ),
         ),
       ),
-
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.cardDark,
@@ -312,7 +302,6 @@ class AppTheme {
           color: AppColors.ink500Dark,
         ),
       ),
-
       dialogTheme: DialogThemeData(
         backgroundColor: AppColors.overlayDark,
         shape: RoundedRectangleBorder(
@@ -320,7 +309,6 @@ class AppTheme {
         ),
         elevation: 0,
       ),
-
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.cardDark,
         contentTextStyle: typography.bodyMedium?.copyWith(
