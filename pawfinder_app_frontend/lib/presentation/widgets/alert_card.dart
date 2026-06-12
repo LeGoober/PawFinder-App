@@ -35,22 +35,33 @@ class AlertCard extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: GlassSurface(
-        blurSigma: 8,
+        blurSigma: 10,
         borderRadius: 20,
         elevation: 3,
+        // Warmer, more opaque glass for text readability
+        customGradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xCCFFFBF5), // 80% opacity warm paper
+            Color(0xC2FFF5EB), // 76% card tone
+            Color(0xB8FFF0E3), // 72% warm overlay
+          ],
+          stops: [0.0, 0.55, 1.0],
+        ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
             borderRadius: BorderRadius.circular(20),
-            splashColor: AppColors.primary.withValues(alpha: 0.08),
-            highlightColor: AppColors.primary.withValues(alpha: 0.04),
+            splashColor: AppColors.primary.withValues(alpha: 0.06),
+            highlightColor: AppColors.primary.withValues(alpha: 0.03),
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildPhoto(),
+                  _buildPetSilhouette(),
                   const SizedBox(width: 14),
                   Expanded(child: _buildContent()),
                 ],
@@ -62,29 +73,35 @@ class AlertCard extends StatelessWidget {
     );
   }
 
-  Widget _buildPhoto() {
+  Widget _buildPetSilhouette() {
+    final isDog = species == 'Dog';
     return Container(
-      width: 72,
-      height: 72,
+      width: 68,
+      height: 68,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            AppColors.primary.withValues(alpha: 0.08),
-            AppColors.secondary.withValues(alpha: 0.06),
+            AppColors.primary.withValues(alpha: 0.10),
+            AppColors.secondary.withValues(alpha: 0.08),
           ],
         ),
         border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.15),
-          width: 1,
+          color: isDog
+              ? AppColors.primary.withValues(alpha: 0.2)
+              : AppColors.secondary.withValues(alpha: 0.2),
+          width: 1.2,
         ),
       ),
       child: Center(
-        child: Text(
-          species == 'Dog' ? '\uD83D\uDC15' : '\uD83D\uDC08',
-          style: const TextStyle(fontSize: 32),
+        child: Icon(
+          isDog ? Icons.pets : Icons.pets,
+          size: 28,
+          color: isDog
+              ? AppColors.primary.withValues(alpha: 0.6)
+              : AppColors.secondary.withValues(alpha: 0.6),
         ),
       ),
     );
@@ -95,83 +112,140 @@ class AlertCard extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Status row
         Row(
           children: [
-            StatusBadge(
-              text: 'MISSING',
-              type: StatusType.active,
-            ),
+            StatusBadge(text: 'MISSING', type: StatusType.active),
             const SizedBox(width: 8),
-            Text(
-              timeMissing,
-              style: AppTypography.caption,
+            // Time pill
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: AppColors.ink900.withValues(alpha: 0.04),
+              ),
+              child: Text(
+                timeMissing,
+                style: AppTypography.caption.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink700,
+                ),
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
-        Text(petName, style: AppTypography.h3),
-        const SizedBox(height: 4),
+        const SizedBox(height: 8),
+        // Pet name — larger, bolder
+        Text(
+          petName,
+          style: AppTypography.h3.copyWith(
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 2),
+        // Species + breed
         Text(
           species,
-          style: AppTypography.bodySmall.copyWith(color: AppColors.ink500),
+          style: AppTypography.body.copyWith(
+            color: AppColors.ink500,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         if (description != null && description!.isNotEmpty) ...[
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           Text(
             description!,
             style: AppTypography.bodySmall.copyWith(
               color: AppColors.ink700,
-              height: 1.4,
+              height: 1.45,
+              fontWeight: FontWeight.w500,
             ),
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ],
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
+        // Bottom row — location, reward, action
         Row(
           children: [
-            const Icon(
-              Icons.location_on_rounded,
-              size: 14,
-              color: AppColors.ink500,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              distance,
-              style: AppTypography.caption.copyWith(
-                fontWeight: FontWeight.w600,
+            // Location
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(6),
+                color: AppColors.secondary.withValues(alpha: 0.08),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.location_on_rounded, size: 13, color: AppColors.secondary),
+                  const SizedBox(width: 3),
+                  Text(
+                    distance,
+                    style: AppTypography.caption.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                ],
               ),
             ),
             if (reward != null) ...[
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(6),
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.reward.withValues(alpha: 0.15),
-                      AppColors.reward.withValues(alpha: 0.05),
+                      AppColors.reward.withValues(alpha: 0.2),
+                      AppColors.reward.withValues(alpha: 0.08),
                     ],
                   ),
                 ),
-                child: Text(
-                  '\$${reward!.toStringAsFixed(0)}',
-                  style: AppTypography.caption.copyWith(
-                    color: AppColors.reward,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.monetization_on_rounded, size: 13, color: AppColors.reward),
+                    const SizedBox(width: 3),
+                    Text(
+                      '\$${reward!.toStringAsFixed(0)}',
+                      style: AppTypography.caption.copyWith(
+                        color: AppColors.reward,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
             const Spacer(),
+            // Styled CTA button (not a bare text link)
             GestureDetector(
               onTap: onActionTap,
-              child: Text(
-                'I Saw This Pet \u2192',
-                style: AppTypography.label.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(10),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withValues(alpha: 0.12),
+                      AppColors.primary.withValues(alpha: 0.06),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                ),
+                child: Text(
+                  'I Saw This Pet',
+                  style: AppTypography.label.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.1,
+                  ),
                 ),
               ),
             ),

@@ -19,7 +19,6 @@ class DashboardPage extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          surfaceTintColor: Colors.transparent,
           title: Text(
             'Community Impact',
             style: AppTypography.h2.copyWith(color: AppColors.ink900),

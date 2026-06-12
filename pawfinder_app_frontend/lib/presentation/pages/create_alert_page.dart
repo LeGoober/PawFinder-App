@@ -52,7 +52,6 @@ class _CreateAlertPageState extends State<CreateAlertPage> {
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
-          surfaceTintColor: Colors.transparent,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: AppColors.ink900),
             onPressed: () => context.pop(),
