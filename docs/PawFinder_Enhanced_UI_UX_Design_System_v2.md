@@ -1,8 +1,8 @@
-# PawFinder — Enhanced UI/UX Design System v2.0
+# PawFinder — Enhanced UI/UX Design System v2.1 (Warm Glass)
 
 > **Purpose:** Escape the "vibecoded" Material Design 3 aesthetic and establish a distinctive, warm, human-centered visual identity befitting a community pet recovery platform.
 >
-> **Status:** Design blueprint — supersedes the visual identity portions of `PawFinder_Design_Guide.md` v1.0. The original guide's UX principles, component functionality, accessibility standards, and screen specs remain valid. This document redefines the *visual expression* of those specs.
+> **Status:** v2.0 (Warm Paper) superseded by v2.1 (Warm Glass) — implemented on branch `ui/glassmorphic-redesign`. The v2.0 color palette, typography, and UX principles remain foundational. v2.1 adds glassmorphism with warm amber/sage undertones.
 >
 > **Date:** June 2026
 
