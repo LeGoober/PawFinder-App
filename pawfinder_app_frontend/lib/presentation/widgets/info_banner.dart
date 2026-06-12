@@ -21,13 +21,13 @@ class InfoBanner extends StatelessWidget {
   Color _backgroundColor() {
     switch (type) {
       case InfoBannerType.info:
-        return AppColors.secondaryLight;
+        return AppColors.secondary.withValues(alpha: 0.12);
       case InfoBannerType.success:
-        return AppColors.successLight;
+        return AppColors.success.withValues(alpha: 0.12);
       case InfoBannerType.warning:
-        return AppColors.rewardLight;
+        return AppColors.reward.withValues(alpha: 0.12);
       case InfoBannerType.error:
-        return AppColors.dangerLight;
+        return AppColors.danger.withValues(alpha: 0.12);
     }
   }
 
@@ -38,7 +38,7 @@ class InfoBanner extends StatelessWidget {
       case InfoBannerType.success:
         return AppColors.success;
       case InfoBannerType.warning:
-        return AppColors.rewardDark;
+        return AppColors.reward;
       case InfoBannerType.error:
         return AppColors.danger;
     }
@@ -51,7 +51,7 @@ class InfoBanner extends StatelessWidget {
       case InfoBannerType.success:
         return Icons.check_circle_outline;
       case InfoBannerType.warning:
-        return Icons.warning_amber_outlined;
+        return Icons.warning_amber_rounded;
       case InfoBannerType.error:
         return Icons.error_outline;
     }
@@ -63,27 +63,36 @@ class InfoBanner extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           color: _backgroundColor(),
-          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: _iconColor().withValues(alpha: 0.15),
+            width: 0.5,
+          ),
         ),
         child: Row(
           children: [
-            Icon(
-              _icon(),
-              size: AppSpacing.iconMedium,
-              color: _iconColor(),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _iconColor().withValues(alpha: 0.1),
+              ),
+              child: Icon(
+                _icon(),
+                size: 18,
+                color: _iconColor(),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 message,
                 style: AppTypography.bodySmall.copyWith(
-                  color: _iconColor(),
+                  color: AppColors.ink900,
                   fontWeight: FontWeight.w500,
                 ),
               ),

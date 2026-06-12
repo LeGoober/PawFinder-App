@@ -3,153 +3,145 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../widgets/stat_card.dart';
+import '../widgets/glass_surface.dart';
+import '../widgets/textured_background.dart';
 
 class DashboardPage extends StatelessWidget {
   const DashboardPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Community Impact',
-          style: AppTypography.h2.copyWith(color: AppColors.ink900),
+    return TexturedBackground(
+      mode: BackgroundMode.warmGlass,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            'Community Impact',
+            style: AppTypography.h2.copyWith(color: AppColors.ink900),
+          ),
         ),
-      ),
-      body: SingleChildScrollView(
-        padding: AppSpacing.paddingLg,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Text(
-                '\uD83C\uDF89 1,247 pets reunited \uD83C\uDF89',
-                style: AppTypography.h1.copyWith(
-                  color: AppColors.primary,
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Hero stat — glass panel
+              GlassSurface(
+                blurSigma: 10,
+                borderRadius: 24,
+                elevation: 4,
+                padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+                child: Column(
+                  children: [
+                    Text(
+                      '\uD83C\uDF89',
+                      style: const TextStyle(fontSize: 40),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '1,247 pets reunited',
+                      style: AppTypography.displaySmall.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Thanks to our amazing community',
+                      style: AppTypography.body.copyWith(
+                        color: AppColors.ink500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-            AppSpacing.xl,
-            Row(
-              children: [
-                Expanded(
-                  child: StatCard(
-                    title: 'Active',
-                    value: '42',
-                    color: AppColors.danger,
+              AppSpacing.xl,
+              // Stat cards row — three glass cards
+              Row(
+                children: [
+                  Expanded(
+                    child: _GlassStatCard(
+                      title: 'Active',
+                      value: '42',
+                      icon: Icons.search_rounded,
+                      color: AppColors.danger,
+                    ),
                   ),
-                ),
-                AppSpacing.md,
-                Expanded(
-                  child: StatCard(
-                    title: 'Resolved',
-                    value: '38',
-                    color: AppColors.success,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _GlassStatCard(
+                      title: 'Resolved',
+                      value: '38',
+                      icon: Icons.check_circle_rounded,
+                      color: AppColors.success,
+                    ),
                   ),
-                ),
-                AppSpacing.md,
-                Expanded(
-                  child: StatCard(
-                    title: 'Avg Time',
-                    value: '18h',
-                    color: AppColors.secondary,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _GlassStatCard(
+                      title: 'Avg Time',
+                      value: '18h',
+                      icon: Icons.timer_rounded,
+                      color: AppColors.secondary,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            AppSpacing.xl,
-            Text('Trend Chart', style: AppTypography.h2),
-            AppSpacing.md,
-            _buildTrendChartPlaceholder(),
-            AppSpacing.xl,
-            Text('Recent Success Stories', style: AppTypography.h2),
-            AppSpacing.md,
-            _buildStoryCard(),
-            AppSpacing.xl,
-            Text(
-              '\uD83C\uDFC6 Top Rescuers',
-              style: AppTypography.h2,
-            ),
-            AppSpacing.md,
-            _buildLeaderboard(),
-            AppSpacing.xxl,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTrendChartPlaceholder() {
-    return Container(
-      height: 200,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.ink100),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.bar_chart,
-              size: AppSpacing.avatarSize,
-              color: AppColors.ink300,
-            ),
-            AppSpacing.sm,
-            Text(
-              'Chart loading...',
-              style: AppTypography.body.copyWith(
-                color: AppColors.ink500,
+                ],
               ),
-            ),
-          ],
+              AppSpacing.xl,
+              Text('Recent Success Stories', style: AppTypography.h2),
+              AppSpacing.md,
+              _buildStoryCard(),
+              AppSpacing.xl,
+              Text('\uD83C\uDFC6 Top Rescuers', style: AppTypography.h2),
+              AppSpacing.md,
+              _buildLeaderboard(),
+              AppSpacing.xxl,
+              AppSpacing.xxl,
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildStoryCard() {
-    return Container(
-      width: double.infinity,
-      padding: AppSpacing.paddingCard,
-      decoration: BoxDecoration(
-        color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-        border: Border.all(color: AppColors.ink100),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink900.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return GlassSurface(
+      blurSigma: 8,
+      borderRadius: 18,
+      elevation: 3,
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
           Container(
-            width: 64,
-            height: 64,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
-              color: AppColors.successLight,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderRadius: BorderRadius.circular(14),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  AppColors.success.withValues(alpha: 0.15),
+                  AppColors.secondary.withValues(alpha: 0.1),
+                ],
+              ),
             ),
             child: const Center(
-              child: Text('\uD83D\uDC36', style: TextStyle(fontSize: 32)),
+              child: Text('\uD83D\uDC36', style: TextStyle(fontSize: 28)),
             ),
           ),
-          AppSpacing.md,
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Buddy found!', style: AppTypography.h3),
-                AppSpacing.xs,
+                const SizedBox(height: 4),
                 Text(
                   'Reunited after 3 days thanks to a neighbour who saw the alert.',
                   style: AppTypography.bodySmall,
@@ -164,100 +156,66 @@ class DashboardPage extends StatelessWidget {
 
   Widget _buildLeaderboard() {
     final rescuers = [
-      _LeaderEntry(
-        rank: 1,
-        name: 'Emily R.',
-        reunions: 47,
-        badge: 'Diamond',
-        medal: Icons.emoji_events,
-        medalColor: Color(0xFFFFD700),
-      ),
-      _LeaderEntry(
-        rank: 2,
-        name: 'Marcus T.',
-        reunions: 32,
-        badge: 'Platinum',
-        medal: Icons.emoji_events,
-        medalColor: Color(0xFFC0C0C0),
-      ),
-      _LeaderEntry(
-        rank: 3,
-        name: 'Jordan L.',
-        reunions: 28,
-        badge: 'Gold',
-        medal: Icons.emoji_events,
-        medalColor: Color(0xFFCD7F32),
-      ),
+      _LeaderEntry(rank: 1, name: 'Emily R.', reunions: 47, badge: 'Diamond',
+          medalColor: const Color(0xFFFFD700)),
+      _LeaderEntry(rank: 2, name: 'Marcus T.', reunions: 32, badge: 'Platinum',
+          medalColor: const Color(0xFFC0C0C0)),
+      _LeaderEntry(rank: 3, name: 'Jordan L.', reunions: 28, badge: 'Gold',
+          medalColor: const Color(0xFFCD7F32)),
     ];
 
     return Column(
-      children: rescuers.map((rescuer) {
+      children: rescuers.map((r) {
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius:
-                  BorderRadius.circular(AppSpacing.radiusMd),
-              border: Border.all(color: AppColors.ink100),
-            ),
+          child: GlassSurface(
+            blurSigma: 6,
+            borderRadius: 16,
+            elevation: 1,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: Row(
               children: [
-                SizedBox(
-                  width: 28,
-                  child: Icon(
-                    rescuer.medal,
-                    size: 24,
-                    color: rescuer.medalColor,
-                  ),
-                ),
+                Icon(Icons.emoji_events_rounded, size: 24, color: r.medalColor),
+                const SizedBox(width: 8),
                 Container(
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusSm),
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.1),
+                        AppColors.secondary.withValues(alpha: 0.08),
+                      ],
+                    ),
                   ),
-                  child: const Icon(
-                    Icons.person,
-                    color: AppColors.ink500,
-                  ),
+                  child: const Icon(Icons.person, color: AppColors.ink500),
                 ),
-                AppSpacing.md,
+                const SizedBox(width: 14),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        rescuer.name,
-                        style: AppTypography.body.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        '${rescuer.reunions} reunions',
-                        style: AppTypography.caption,
-                      ),
+                      Text(r.name, style: AppTypography.body.copyWith(fontWeight: FontWeight.w600)),
+                      Text('${r.reunions} reunions', style: AppTypography.caption),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.radiusSm),
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withValues(alpha: 0.15),
+                        AppColors.primary.withValues(alpha: 0.05),
+                      ],
+                    ),
                   ),
                   child: Text(
-                    rescuer.badge,
+                    r.badge,
                     style: AppTypography.caption.copyWith(
                       color: AppColors.primaryDark,
                       fontWeight: FontWeight.w600,
@@ -273,12 +231,71 @@ class DashboardPage extends StatelessWidget {
   }
 }
 
+class _GlassStatCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  const _GlassStatCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GlassSurface(
+      blurSigma: 8,
+      borderRadius: 18,
+      elevation: 3,
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  color.withValues(alpha: 0.15),
+                  color.withValues(alpha: 0.05),
+                ],
+              ),
+            ),
+            child: Icon(icon, size: 18, color: color),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: AppTypography.displaySmall.copyWith(
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.ink500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _LeaderEntry {
   final int rank;
   final String name;
   final int reunions;
   final String badge;
-  final IconData medal;
   final Color medalColor;
 
   const _LeaderEntry({
@@ -286,7 +303,6 @@ class _LeaderEntry {
     required this.name,
     required this.reunions,
     required this.badge,
-    required this.medal,
     required this.medalColor,
   });
 }

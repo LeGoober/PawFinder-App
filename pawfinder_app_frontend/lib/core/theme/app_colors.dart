@@ -51,6 +51,21 @@ class AppColors {
   static const Color primaryDarkMode = Color(0xFFF0733D);
   static const Color secondaryDarkMode = Color(0xFF6BAFA0);
 
+  // ── Warm Glass Surfaces (glassmorphism) ──
+  // Light mode — warm amber glass with subtle transparency
+  static Color get glassBg => const Color(0xFFFFFBF5).withValues(alpha: 0.65);
+  static Color get glassBorder => const Color(0xFFFFFFFF).withValues(alpha: 0.5);
+  static Color get glassHighlight => const Color(0xFFFFFFFF).withValues(alpha: 0.7);
+  static Color get glassShadow => const Color(0xFF2D241F).withValues(alpha: 0.06);
+  static const Color glassBlurTint = Color(0x0AE8612D); // faint clay warmth behind blur
+
+  // Dark mode — warm charcoal glass
+  static Color get glassBgDark => const Color(0xFF1A1815).withValues(alpha: 0.55);
+  static Color get glassBorderDark => const Color(0xFFFFFFFF).withValues(alpha: 0.08);
+  static Color get glassHighlightDark => const Color(0xFFFFFFFF).withValues(alpha: 0.12);
+  static Color get glassShadowDark => const Color(0xFF000000).withValues(alpha: 0.20);
+  static const Color glassBlurTintDark = Color(0x08F0733D); // faint warm glow behind blur
+
   // ── Backward-compatible aliases (v1 → v2 migration) ──
   static const Color background = paper;
   static const Color surface = card;

@@ -29,23 +29,25 @@ class AppTheme {
       textTheme: typography,
       fontFamily: AppTypography.fontBody,
 
-      // ── App Bar ──
+      // ── App Bar: Transparent, glass-ready ──
       appBarTheme: AppBarTheme(
         elevation: 0,
-        scrolledUnderElevation: 0.5,
-        backgroundColor: AppColors.paper,
+        scrolledUnderElevation: 0,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.ink900,
         titleTextStyle: typography.headlineSmall,
         centerTitle: false,
+        surfaceTintColor: Colors.transparent,
       ),
 
-      // ── Bottom Navigation ──
+      // ── Bottom Navigation: Transparent for glass overlay ──
       bottomNavigationBarTheme: BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.ink500,
-        backgroundColor: AppColors.paper,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         selectedLabelStyle: GoogleFonts.outfit(
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -56,14 +58,14 @@ class AppTheme {
         ),
       ),
 
-      // ── Cards ──
+      // ── Cards: Glass-ready, minimal default ──
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.card,
+        color: Colors.transparent,
         shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: AppColors.border, width: 0.5),
+          borderRadius: BorderRadius.circular(18),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       ),
@@ -157,11 +159,12 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
       ),
 
-      // ── Dialog ──
+      // ── Dialog: Glass panel ──
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.overlay,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         elevation: 0,
       ),
@@ -224,25 +227,24 @@ class AppTheme {
       fontFamily: AppTypography.fontBody,
       appBarTheme: const AppBarTheme(
         elevation: 0,
-        backgroundColor: AppColors.paperDark,
+        backgroundColor: Colors.transparent,
         foregroundColor: AppColors.ink900Dark,
+        surfaceTintColor: Colors.transparent,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
         selectedItemColor: AppColors.primaryDarkMode,
         unselectedItemColor: AppColors.ink500Dark,
-        backgroundColor: AppColors.paperDark,
+        backgroundColor: Colors.transparent,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: AppColors.cardDark,
+        color: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(
-            color: Color(0xFF302B26),
-            width: 0.5,
-          ),
+          borderRadius: BorderRadius.circular(18),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -303,9 +305,10 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: AppColors.overlayDark,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
         ),
         elevation: 0,
       ),

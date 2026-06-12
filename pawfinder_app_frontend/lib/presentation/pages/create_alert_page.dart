@@ -7,7 +7,9 @@ import '../../core/theme/app_typography.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
 import '../widgets/filter_chip.dart';
+import '../widgets/glass_surface.dart';
 import '../widgets/info_banner.dart';
+import '../widgets/textured_background.dart';
 
 class CreateAlertPage extends StatefulWidget {
   const CreateAlertPage({super.key});
@@ -42,43 +44,48 @@ class _CreateAlertPageState extends State<CreateAlertPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.ink900),
-          onPressed: () => context.pop(),
+    return TexturedBackground(
+      mode: BackgroundMode.warmGlass,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          surfaceTintColor: Colors.transparent,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: AppColors.ink900),
+            onPressed: () => context.pop(),
+          ),
+          title: Column(
+            children: [
+              Text(
+                'Report Missing Pet',
+                style: AppTypography.h3.copyWith(color: AppColors.ink900),
+              ),
+              AppSpacing.xs,
+              Text(
+                '${_currentStep + 1}/5',
+                style: AppTypography.caption.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+            ],
+          ),
+          centerTitle: true,
         ),
-        title: Column(
+        body: Column(
           children: [
-            Text(
-              'Report Missing Pet',
-              style: AppTypography.h3.copyWith(color: AppColors.ink900),
-            ),
-            AppSpacing.xs,
-            Text(
-              '${_currentStep + 1}/5',
-              style: AppTypography.caption.copyWith(
-                color: AppColors.primary,
+            _buildStepIndicator(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: AppSpacing.paddingLg,
+                child: _buildStepContent(),
               ),
             ),
+            _buildBottomButton(),
           ],
         ),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          _buildStepIndicator(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: AppSpacing.paddingLg,
-              child: _buildStepContent(),
-            ),
-          ),
-          _buildBottomButton(),
-        ],
       ),
     );
   }
@@ -489,14 +496,14 @@ class _CreateAlertPageState extends State<CreateAlertPage> {
         bottom: MediaQuery.of(context).padding.bottom + 16,
       ),
       decoration: BoxDecoration(
-        color: AppColors.background,
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.ink900.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-          ),
-        ],
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.paper.withValues(alpha: 0.4),
+            AppColors.paper.withValues(alpha: 0.9),
+          ],
+        ),
       ),
       child: Row(
         children: [
