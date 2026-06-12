@@ -20,71 +20,59 @@ class HomePage extends StatelessWidget {
         backgroundColor: Colors.transparent,
         extendBodyBehindAppBar: true,
         appBar: _buildGlassAppBar(context),
-        body: Stack(
-          children: [
-            SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.only(bottom: 100),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Warning banner
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: InfoBanner(
-                      message: '\u26A0\uFE0F 3 pets missing near you',
-                      type: InfoBannerType.warning,
-                    ),
-                  ),
-                  AppSpacing.md,
-                  // Map area — glass panel with blurred map hint
-                  _buildGlassMapArea(),
-                  AppSpacing.lg,
-                  // Section header with decorative line
-                  _buildSectionHeader('Nearby Alerts', 'See all'),
-                  AppSpacing.sm,
-                  // Alert cards in glass
-                  const AlertCard(
-                    petName: 'Max',
-                    species: 'Dog',
-                    timeMissing: '2 hours ago',
-                    distance: '0.5 km away',
-                    description:
-                        'Golden Retriever, friendly. Last seen near Oak Street park.',
-                    reward: 100,
-                  ),
-                  const AlertCard(
-                    petName: 'Luna',
-                    species: 'Cat',
-                    timeMissing: '30 min ago',
-                    distance: '1.2 km away',
-                    description:
-                        'Tabby cat with white paws. Wearing a blue collar.',
-                  ),
-                  const AlertCard(
-                    petName: 'Rocky',
-                    species: 'Dog',
-                    timeMissing: '1 hour ago',
-                    distance: '0.8 km away',
-                    description:
-                        'German Shepherd, very shy. Do not chase. Last seen near the library.',
-                    reward: 200,
-                  ),
-                  const SizedBox(height: 24),
-                ],
+        body: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.only(bottom: 110),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Warning banner
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: InfoBanner(
+                  message: '\u26A0\uFE0F 3 pets missing near you',
+                  type: InfoBannerType.warning,
+                ),
               ),
-            ),
-            // Floating report pill — properly sized, no overflow
-            Positioned(
-              bottom: 16,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: _buildReportPill(context),
+              AppSpacing.md,
+              // Map area — glass panel with blurred map hint
+              _buildGlassMapArea(),
+              AppSpacing.lg,
+              // Section header with decorative line
+              _buildSectionHeader('Nearby Alerts', 'See all'),
+              AppSpacing.sm,
+              // Alert cards in glass
+              const AlertCard(
+                petName: 'Max',
+                species: 'Dog',
+                timeMissing: '2 hours ago',
+                distance: '0.5 km away',
+                description:
+                    'Golden Retriever, friendly. Last seen near Oak Street park.',
+                reward: 100,
               ),
-            ),
-          ],
+              const AlertCard(
+                petName: 'Luna',
+                species: 'Cat',
+                timeMissing: '30 min ago',
+                distance: '1.2 km away',
+                description:
+                    'Tabby cat with white paws. Wearing a blue collar.',
+              ),
+              const AlertCard(
+                petName: 'Rocky',
+                species: 'Dog',
+                timeMissing: '1 hour ago',
+                distance: '0.8 km away',
+                description:
+                    'German Shepherd, very shy. Do not chase. Last seen near the library.',
+                reward: 200,
+              ),
+            ],
+          ),
         ),
+        floatingActionButton: _buildReportPill(context),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       ),
     );
   }

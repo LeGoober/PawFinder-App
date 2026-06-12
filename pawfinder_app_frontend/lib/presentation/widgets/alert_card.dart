@@ -132,6 +132,28 @@ class AlertCard extends StatelessWidget {
                 ),
               ),
             ),
+            if (reward != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(6),
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.reward.withValues(alpha: 0.2),
+                      AppColors.reward.withValues(alpha: 0.08),
+                    ],
+                  ),
+                ),
+                child: Text(
+                  '\$${reward!.toStringAsFixed(0)}',
+                  style: AppTypography.caption.copyWith(
+                    color: AppColors.reward,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
         const SizedBox(height: 8),
@@ -166,7 +188,7 @@ class AlertCard extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 12),
-        // Bottom row — location, reward, action
+        // Bottom row — location + action (reward moved to status row)
         Row(
           children: [
             // Location
@@ -179,7 +201,8 @@ class AlertCard extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.location_on_rounded, size: 13, color: AppColors.secondary),
+                  Icon(Icons.location_on_rounded,
+                      size: 13, color: AppColors.secondary),
                   const SizedBox(width: 3),
                   Text(
                     distance,
@@ -191,61 +214,30 @@ class AlertCard extends StatelessWidget {
                 ],
               ),
             ),
-            if (reward != null) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(6),
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.reward.withValues(alpha: 0.2),
-                      AppColors.reward.withValues(alpha: 0.08),
-                    ],
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.monetization_on_rounded, size: 13, color: AppColors.reward),
-                    const SizedBox(width: 3),
-                    Text(
-                      '\$${reward!.toStringAsFixed(0)}',
-                      style: AppTypography.caption.copyWith(
-                        color: AppColors.reward,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
             const Spacer(),
-            // Styled CTA button (not a bare text link)
+            // CTA icon button — compact, no overflow
             GestureDetector(
               onTap: onActionTap,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(10),
                   gradient: LinearGradient(
                     colors: [
-                      AppColors.primary.withValues(alpha: 0.12),
-                      AppColors.primary.withValues(alpha: 0.06),
+                      AppColors.primary.withValues(alpha: 0.15),
+                      AppColors.primary.withValues(alpha: 0.08),
                     ],
                   ),
                   border: Border.all(
-                    color: AppColors.primary.withValues(alpha: 0.25),
+                    color: AppColors.primary.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
-                child: Text(
-                  'I Saw This Pet',
-                  style: AppTypography.label.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.1,
-                  ),
+                child: const Icon(
+                  Icons.visibility_rounded,
+                  size: 18,
+                  color: AppColors.primary,
                 ),
               ),
             ),
