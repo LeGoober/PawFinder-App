@@ -37,7 +37,6 @@ class AppTheme {
         foregroundColor: AppColors.ink900,
         titleTextStyle: typography.headlineSmall,
         centerTitle: false,
-        surfaceTintColor: Colors.transparent,
       ),
 
       // ── Bottom Navigation: Transparent for glass overlay ──
@@ -47,7 +46,6 @@ class AppTheme {
         unselectedItemColor: AppColors.ink500,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
         selectedLabelStyle: GoogleFonts.outfit(
           fontSize: 11,
           fontWeight: FontWeight.w600,
@@ -62,9 +60,7 @@ class AppTheme {
       cardTheme: CardThemeData(
         elevation: 0,
         color: Colors.transparent,
-        shadowColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
+        shadowColor: Colors.transparent,        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
         margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -161,9 +157,7 @@ class AppTheme {
 
       // ── Dialog: Glass panel ──
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
+        backgroundColor: Colors.transparent,        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         elevation: 0,
@@ -229,7 +223,6 @@ class AppTheme {
         elevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: AppColors.ink900Dark,
-        surfaceTintColor: Colors.transparent,
       ),
       bottomNavigationBarTheme: const BottomNavigationBarThemeData(
         type: BottomNavigationBarType.fixed,
@@ -237,13 +230,10 @@ class AppTheme {
         unselectedItemColor: AppColors.ink500Dark,
         backgroundColor: Colors.transparent,
         elevation: 0,
-        surfaceTintColor: Colors.transparent,
       ),
       cardTheme: CardThemeData(
         elevation: 0,
-        color: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
+        color: Colors.transparent,        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(18),
         ),
       ),
@@ -305,9 +295,7 @@ class AppTheme {
         ),
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: Colors.transparent,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(
+        backgroundColor: Colors.transparent,        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(24),
         ),
         elevation: 0,

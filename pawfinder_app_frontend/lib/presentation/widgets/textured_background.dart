@@ -160,6 +160,7 @@ class TexturedBackground extends StatelessWidget {
       ],
     );
   }
+}
 
 class _NoisePainter extends CustomPainter {
   @override
