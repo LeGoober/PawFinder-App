@@ -8,12 +8,14 @@ class StatCard extends StatelessWidget {
   final String title;
   final String value;
   final Color color;
+  final IconData? icon;
 
   const StatCard({
     super.key,
     required this.title,
     required this.value,
     required this.color,
+    this.icon,
   });
 
   @override
@@ -35,17 +37,22 @@ class StatCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: AppTypography.caption.copyWith(
-              color: AppColors.ink500,
+          if (icon != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Icon(icon, size: 22, color: color),
             ),
-          ),
-          AppSpacing.xs,
           Text(
             value,
             style: AppTypography.displayLarge.copyWith(
               color: color,
+            ),
+          ),
+          AppSpacing.xs,
+          Text(
+            title,
+            style: AppTypography.caption.copyWith(
+              color: AppColors.ink500,
             ),
           ),
         ],

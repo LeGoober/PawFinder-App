@@ -26,11 +26,24 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<AnalyticsService>(() => AnalyticsService());
 
   // Data sources
-  getIt.registerLazySingleton<ApiClient>(() => ApiClient(authService: getIt<AuthService>()));
+  getIt.registerLazySingleton<ApiClient>(
+    () => ApiClient(authService: getIt<AuthService>()),
+  );
 
-  // Repositories
-  getIt.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
-  getIt.registerLazySingleton<AlertRepository>(() => AlertRepositoryImpl());
-  getIt.registerLazySingleton<SightingRepository>(() => SightingRepositoryImpl());
-  getIt.registerLazySingleton<ConversationRepository>(() => ConversationRepositoryImpl());
+  // Repositories — API-backed implementations
+  getIt.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      client: getIt<ApiClient>(),
+      authService: getIt<AuthService>(),
+    ),
+  );
+  getIt.registerLazySingleton<AlertRepository>(
+    () => AlertRepositoryImpl(client: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<SightingRepository>(
+    () => SightingRepositoryImpl(client: getIt<ApiClient>()),
+  );
+  getIt.registerLazySingleton<ConversationRepository>(
+    () => ConversationRepositoryImpl(client: getIt<ApiClient>()),
+  );
 }

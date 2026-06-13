@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
 
 class SkeletonLoader extends StatelessWidget {
   final double width;
@@ -61,6 +60,27 @@ class SkeletonLoader extends StatelessWidget {
           borderRadius: BorderRadius.circular(borderRadius),
         ),
       ),
+    );
+  }
+}
+
+/// A scrollable list of skeleton cards for loading states.
+class SkeletonListLoader extends StatelessWidget {
+  final int itemCount;
+
+  const SkeletonListLoader({super.key, this.itemCount = 5});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: itemCount,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: SkeletonLoader.card(),
+        );
+      },
     );
   }
 }

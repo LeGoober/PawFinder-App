@@ -1,75 +1,89 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:pawfinder_app/domain/entities/message.dart';
+import 'package:pawfinder_app/domain/entities/conversation.dart';
+import 'package:pawfinder_app/domain/repositories/conversation_repository.dart';
 
 part 'messaging_state.dart';
 
 class MessagingCubit extends Cubit<MessagingState> {
-  MessagingCubit() : super(MessagingInitial());
+  final ConversationRepository _conversationRepository;
 
+  MessagingCubit({
+    required ConversationRepository conversationRepository,
+  })  : _conversationRepository = conversationRepository,
+        super(MessagingInitial());
+
+  String? _currentUserId;
+
+  /// Set the current user ID for owner detection.
+  void setCurrentUserId(String userId) {
+    _currentUserId = userId;
+  }
+
+  /// Load conversations list.
+  Future<void> loadConversations() async {
+    if (_currentUserId == null) {
+      emit(const MessagingError(message: 'Please log in to view messages'));
+      return;
+    }
+    emit(MessagingLoading());
+
+    try {
+      final result =
+          await _conversationRepository.getConversations(_currentUserId!);
+
+      result.fold(
+        (failure) => emit(MessagingError(message: failure.message)),
+        (conversations) => emit(ConversationsLoaded(conversations: conversations)),
+      );
+    } catch (e) {
+      emit(MessagingError(message: e.toString()));
+    }
+  }
+
+  /// Load messages for a specific conversation.
   Future<void> loadMessages(String conversationId) async {
     emit(MessagingLoading());
-    await Future.delayed(const Duration(seconds: 1));
-    emit(
-      const MessagesLoaded(
-        messages: [
-          _MockMessage(
-            id: 'm1',
-            text: 'Hi! I think I saw Max near the park on Elm Street.',
-            senderId: 'finder-1',
-            senderName: 'Sarah',
-            isOwner: false,
-            timestamp: '10:30 AM',
-          ),
-          _MockMessage(
-            id: 'm2',
-            text: 'Really? That is close to home. Can you send a photo?',
-            senderId: 'owner-1',
-            senderName: 'Me',
-            isOwner: true,
-            timestamp: '10:32 AM',
-          ),
-          _MockMessage(
-            id: 'm3',
-            text: 'Sure, I will grab one. He looked a bit scared but unharmed.',
-            senderId: 'finder-1',
-            senderName: 'Sarah',
-            isOwner: false,
-            timestamp: '10:33 AM',
-          ),
-          _MockMessage(
-            id: 'm4',
-            text: 'Thank you so much! I am heading there now.',
-            senderId: 'owner-1',
-            senderName: 'Me',
-            isOwner: true,
-            timestamp: '10:34 AM',
-          ),
-        ],
-      ),
-    );
+
+    try {
+      final result =
+          await _conversationRepository.getMessages(conversationId);
+
+      result.fold(
+        (failure) => emit(MessagingError(message: failure.message)),
+        (messages) => emit(MessagesLoaded(messages: messages)),
+      );
+    } catch (e) {
+      emit(MessagingError(message: e.toString()));
+    }
   }
 
-  Future<void> sendMessage(String text) async {
+  /// Send a message in a conversation.
+  Future<void> sendMessage({
+    required String conversationId,
+    required String content,
+  }) async {
+    if (_currentUserId == null) {
+      emit(const MessagingError(message: 'Please log in to send messages'));
+      return;
+    }
+
     emit(MessagingLoading());
-    await Future.delayed(const Duration(milliseconds: 500));
-    emit(const MessageSent());
+
+    try {
+      final result = await _conversationRepository.sendMessage(
+        conversationId: conversationId,
+        senderId: _currentUserId!,
+        content: content,
+      );
+
+      result.fold(
+        (failure) => emit(MessagingError(message: failure.message)),
+        (message) => emit(MessageSent(message: message)),
+      );
+    } catch (e) {
+      emit(MessagingError(message: e.toString()));
+    }
   }
-}
-
-class _MockMessage {
-  final String id;
-  final String text;
-  final String senderId;
-  final String senderName;
-  final bool isOwner;
-  final String timestamp;
-
-  const _MockMessage({
-    required this.id,
-    required this.text,
-    required this.senderId,
-    required this.senderName,
-    required this.isOwner,
-    required this.timestamp,
-  });
 }

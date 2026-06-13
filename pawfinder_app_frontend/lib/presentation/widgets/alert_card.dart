@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../domain/entities/alert.dart';
+import '../helpers/time_ago.dart';
 import 'glass_surface.dart';
 import 'status_badge.dart';
 
@@ -29,6 +31,33 @@ class AlertCard extends StatelessWidget {
     this.onTap,
     this.onActionTap,
   });
+
+  /// Factory that creates an [AlertCard] from a domain [Alert] entity.
+  factory AlertCard.fromAlert({
+    Key? key,
+    required Alert alert,
+    VoidCallback? onTap,
+    VoidCallback? onActionTap,
+  }) {
+    return AlertCard(
+      key: key,
+      petName: alert.petName,
+      species: alert.species,
+      timeMissing: formatTimeAgo(alert.createdAt),
+      distance: _formatDistance(alert.fuzzedLat, alert.fuzzedLng),
+      description: alert.description,
+      reward: alert.rewardAmount > 0 ? alert.rewardAmount : null,
+      onTap: onTap ?? onActionTap,
+      onActionTap: onActionTap,
+    );
+  }
+
+  /// Format distance string (placeholder — actual distance calculation
+  /// requires comparing alert coords with current location).
+  static String _formatDistance(double lat, double lng) {
+    // In a real app you'd calculate Haversine from current position.
+    return 'Nearby';
+  }
 
   @override
   Widget build(BuildContext context) {

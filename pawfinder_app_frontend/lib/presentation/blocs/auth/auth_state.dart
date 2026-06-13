@@ -16,16 +16,12 @@ class AuthLoading extends AuthState {
 }
 
 class AuthAuthenticated extends AuthState {
-  final String userId;
-  final String displayName;
+  final User user;
 
-  const AuthAuthenticated({
-    required this.userId,
-    required this.displayName,
-  });
+  const AuthAuthenticated({required this.user});
 
   @override
-  List<Object?> get props => [userId, displayName];
+  List<Object?> get props => [user];
 }
 
 class AuthError extends AuthState {

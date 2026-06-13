@@ -16,7 +16,7 @@ class AlertLoading extends AlertState {
 }
 
 class AlertsLoaded extends AlertState {
-  final List<_MockAlert> alerts;
+  final List<Alert> alerts;
 
   const AlertsLoaded({required this.alerts});
 
@@ -26,6 +26,14 @@ class AlertsLoaded extends AlertState {
 
 class AlertCreated extends AlertState {
   const AlertCreated();
+}
+
+class AlertResolved extends AlertState {
+  const AlertResolved();
+}
+
+class AlertCancelled extends AlertState {
+  const AlertCancelled();
 }
 
 class AlertError extends AlertState {

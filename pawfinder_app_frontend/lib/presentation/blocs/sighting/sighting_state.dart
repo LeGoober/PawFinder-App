@@ -16,7 +16,7 @@ class SightingLoading extends SightingState {
 }
 
 class SightingsLoaded extends SightingState {
-  final List<_MockSighting> sightings;
+  final List<Sighting> sightings;
 
   const SightingsLoaded({required this.sightings});
 
@@ -25,7 +25,12 @@ class SightingsLoaded extends SightingState {
 }
 
 class SightingReported extends SightingState {
-  const SightingReported();
+  final Sighting sighting;
+
+  const SightingReported({required this.sighting});
+
+  @override
+  List<Object?> get props => [sighting];
 }
 
 class SightingError extends SightingState {

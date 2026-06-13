@@ -1,133 +1,229 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../di/injection.dart';
+import '../blocs/alert/alert_cubit.dart';
+import '../blocs/sighting/sighting_cubit.dart';
+import '../helpers/time_ago.dart';
 import '../widgets/app_button.dart';
 import '../widgets/info_banner.dart';
+import '../widgets/skeleton_loader.dart';
+import '../widgets/status_badge.dart';
 
-class AlertDetailPage extends StatelessWidget {
-  const AlertDetailPage({super.key});
+class AlertDetailPage extends StatefulWidget {
+  final String alertId;
+
+  const AlertDetailPage({super.key, required this.alertId});
+
+  @override
+  State<AlertDetailPage> createState() => _AlertDetailPageState();
+}
+
+class _AlertDetailPageState extends State<AlertDetailPage> {
+  late final AlertCubit _alertCubit;
+  late final SightingCubit _sightingCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _alertCubit = AlertCubit(alertRepository: getIt());
+    _sightingCubit = SightingCubit(sightingRepository: getIt());
+    _alertCubit.loadAlertById(widget.alertId);
+    _sightingCubit.loadSightings(widget.alertId);
+  }
+
+  @override
+  void dispose() {
+    _alertCubit.close();
+    _sightingCubit.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeroImage(),
-                  _buildAppBar(context),
-                  AppSpacing.lg,
-                  Padding(
-                    padding: AppSpacing.paddingHorizontalLg,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        InfoBanner(
-                          message:
-                              '\uD83D\uDD12 Your contact info is hidden from finders.',
-                          type: InfoBannerType.info,
-                        ),
-                        AppSpacing.lg,
-                        Text('Max', style: AppTypography.h1),
-                        AppSpacing.xs,
-                        Row(
-                          children: [
-                            Text(
-                              'Golden Retriever',
-                              style: AppTypography.bodyLarge,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _alertCubit),
+        BlocProvider.value(value: _sightingCubit),
+      ],
+      child: Scaffold(
+        backgroundColor: AppColors.background,
+        body: BlocBuilder<AlertCubit, AlertState>(
+          bloc: _alertCubit,
+          builder: (context, state) {
+            if (state is AlertLoading) {
+              return const SkeletonListLoader(itemCount: 1);
+            }
+
+            if (state is AlertsLoaded && state.alerts.isNotEmpty) {
+              final alert = state.alerts.first;
+              return _buildDetailView(context, alert);
+            }
+
+            if (state is AlertError) {
+              return _buildErrorView(context);
+            }
+
+            return const SizedBox.shrink();
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDetailView(BuildContext context, alert) {
+    final currencySymbol = alert.rewardCurrency == 'ZAR' ? 'R' : '\$';
+
+    return Column(
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildHeroImage(),
+                _buildAppBar(context),
+                AppSpacing.lg,
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      InfoBanner(
+                        message: 'Your contact info is hidden from finders.',
+                        type: InfoBannerType.info,
+                      ),
+                      AppSpacing.lg,
+                      // Pet name + species
+                      Text(alert.petName, style: AppTypography.h1),
+                      AppSpacing.xs,
+                      Row(
+                        children: [
+                          Text(alert.species, style: AppTypography.bodyLarge),
+                          const SizedBox(width: 8),
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: AppColors.ink300,
                             ),
-                            const SizedBox(width: 8),
-                            Container(
-                              width: 4,
-                              height: 4,
-                              decoration: const BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: AppColors.ink300,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Missing 2 hours',
-                              style: AppTypography.bodySmall,
-                            ),
-                          ],
-                        ),
-                        AppSpacing.xl,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Missing ${formatTimeAgo(alert.createdAt)}',
+                            style: AppTypography.bodySmall,
+                          ),
+                        ],
+                      ),
+                      AppSpacing.md,
+                      StatusBadge(
+                        text: alert.status.name.toUpperCase(),
+                        type: alert.status.name == 'active'
+                            ? StatusType.active
+                            : StatusType.resolved,
+                      ),
+                      AppSpacing.xl,
+                      // Description
+                      if (alert.description != null &&
+                          alert.description!.isNotEmpty) ...[
                         Text('Description', style: AppTypography.h3),
                         AppSpacing.sm,
                         Text(
-                          'Max is a friendly 3-year-old Golden Retriever with a red '
-                          'collar and ID tag. He slipped out the back gate during the '
-                          'afternoon thunderstorm. He responds to his name and loves '
-                          'treats. Please do not chase him \u2014 he may get scared and '
-                          'run further.',
+                          alert.description!,
                           style: AppTypography.body.copyWith(
                             color: AppColors.ink700,
                           ),
                         ),
                         AppSpacing.xl,
-                        InfoBanner(
-                          message:
-                              '\u26A0\uFE0F Never send money upfront. Rewards are '
-                              'handled securely in-app.',
-                          type: InfoBannerType.warning,
-                        ),
-                        AppSpacing.lg,
-                        _buildRewardCard(),
-                        AppSpacing.xl,
-                        Text('Recent Sightings', style: AppTypography.h3),
-                        AppSpacing.md,
-                        _buildSightingItem(
-                          location: 'Oak Street Park',
-                          time: '15 min ago',
-                          reporter: 'Sarah M.',
-                        ),
-                        AppSpacing.sm,
-                        _buildSightingItem(
-                          location: 'Near the library',
-                          time: '1 hour ago',
-                          reporter: 'James K.',
-                        ),
-                        AppSpacing.xxxl,
                       ],
-                    ),
+                      // Location
+                      if (alert.lastSeenAddress != null &&
+                          alert.lastSeenAddress!.isNotEmpty) ...[
+                        Text('Last Seen', style: AppTypography.h3),
+                        AppSpacing.sm,
+                        Row(
+                          children: [
+                            const Icon(Icons.location_on,
+                                size: 18, color: AppColors.danger),
+                            const SizedBox(width: 4),
+                            Expanded(
+                              child: Text(
+                                alert.lastSeenAddress!,
+                                style: AppTypography.body.copyWith(
+                                  color: AppColors.ink700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        AppSpacing.xl,
+                      ],
+                      // Reward
+                      if (alert.rewardAmount > 0) ...[
+                        _buildRewardCard(
+                            currencySymbol, alert.rewardAmount.toStringAsFixed(0)),
+                        AppSpacing.xl,
+                      ],
+                      // Sightings section
+                      Text('Recent Sightings', style: AppTypography.h3),
+                      AppSpacing.md,
+                      BlocBuilder<SightingCubit, SightingState>(
+                        bloc: _sightingCubit,
+                        builder: (context, sightingState) {
+                          if (sightingState is SightingLoading) {
+                            return const SkeletonListLoader(itemCount: 1);
+                          }
+                          if (sightingState is SightingsLoaded) {
+                            if (sightingState.sightings.isEmpty) {
+                              return Text(
+                                'No sightings reported yet.',
+                                style: AppTypography.body.copyWith(
+                                  color: AppColors.ink500,
+                                ),
+                              );
+                            }
+                            return Column(
+                              children: sightingState.sightings
+                                  .map((s) => _buildSightingItem(s))
+                                  .toList(),
+                            );
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
+                      AppSpacing.xxl,
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-          _buildBottomAction(),
-        ],
-      ),
+        ),
+        _buildBottomAction(context),
+      ],
     );
   }
 
   Widget _buildHeroImage() {
     return Container(
-      height: AppSpacing.heroImageHeight,
+      height: 200,
       width: double.infinity,
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-      ),
+      decoration: const BoxDecoration(color: AppColors.surface),
       child: Center(
-        child: Text(
-          '\uD83D\uDC15',
-          style: TextStyle(fontSize: 80),
-        ),
+        child: Icon(Icons.pets, size: 80,
+            color: AppColors.primary.withValues(alpha: 0.3)),
       ),
     );
   }
 
   Widget _buildAppBar(BuildContext context) {
     return Padding(
-      padding: AppSpacing.paddingHorizontalLg.copyWith(top: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(top: 8),
       child: Row(
         children: [
           Container(
@@ -146,7 +242,6 @@ class AlertDetailPage extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.arrow_back, size: 20),
               onPressed: () => context.pop(),
-              padding: EdgeInsets.zero,
               color: AppColors.ink900,
             ),
           ),
@@ -154,9 +249,8 @@ class AlertDetailPage extends StatelessWidget {
           PopupMenuButton<String>(
             offset: const Offset(0, 40),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderRadius: BorderRadius.circular(8),
             ),
-            onSelected: (value) {},
             itemBuilder: (context) => [
               PopupMenuItem(
                 value: 'share',
@@ -164,19 +258,8 @@ class AlertDetailPage extends StatelessWidget {
                   children: [
                     const Icon(Icons.share_outlined,
                         size: 20, color: AppColors.ink700),
-                    AppSpacing.sm,
+                    const SizedBox(width: 8),
                     Text('Share', style: AppTypography.body),
-                  ],
-                ),
-              ),
-              PopupMenuItem(
-                value: 'save',
-                child: Row(
-                  children: [
-                    const Icon(Icons.bookmark_outline,
-                        size: 20, color: AppColors.ink700),
-                    AppSpacing.sm,
-                    Text('Save', style: AppTypography.body),
                   ],
                 ),
               ),
@@ -194,11 +277,8 @@ class AlertDetailPage extends StatelessWidget {
                   ),
                 ],
               ),
-              child: const Icon(
-                Icons.more_horiz,
-                size: 20,
-                color: AppColors.ink900,
-              ),
+              child: const Icon(Icons.more_horiz,
+                  size: 20, color: AppColors.ink900),
             ),
           ),
         ],
@@ -206,13 +286,13 @@ class AlertDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRewardCard() {
+  Widget _buildRewardCard(String symbol, String amount) {
     return Container(
       width: double.infinity,
-      padding: AppSpacing.paddingCard,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.rewardLight,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.reward.withValues(alpha: 0.5)),
       ),
       child: Row(
@@ -222,29 +302,23 @@ class AlertDetailPage extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: AppColors.reward,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
-              Icons.card_giftcard,
-              color: AppColors.rewardDark,
-            ),
+            child: const Icon(Icons.card_giftcard, color: AppColors.rewardDark),
           ),
-          AppSpacing.lg,
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '\$100 Reward',
-                  style: AppTypography.h3.copyWith(
-                    color: AppColors.rewardDark,
-                  ),
+                  '$symbol$amount Reward',
+                  style: AppTypography.h3.copyWith(color: AppColors.rewardDark),
                 ),
                 Text(
                   'Offered for safe return. Held securely in escrow.',
-                  style: AppTypography.bodySmall.copyWith(
-                    color: AppColors.rewardDark,
-                  ),
+                  style:
+                      AppTypography.bodySmall.copyWith(color: AppColors.rewardDark),
                 ),
               ],
             ),
@@ -254,17 +328,14 @@ class AlertDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSightingItem({
-    required String location,
-    required String time,
-    required String reporter,
-  }) {
+  Widget _buildSightingItem(sighting) {
     return Container(
       width: double.infinity,
-      padding: AppSpacing.paddingCard,
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.ink100),
       ),
       child: Row(
@@ -274,29 +345,31 @@ class AlertDetailPage extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: AppColors.secondaryLight,
-              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.visibility,
-              color: AppColors.secondary,
-              size: 20,
-            ),
+            child: const Icon(Icons.visibility,
+                color: AppColors.secondary, size: 20),
           ),
-          AppSpacing.md,
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  location,
-                  style: AppTypography.body.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  'Sighting reported',
+                  style: AppTypography.body.copyWith(fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  '$time \u2022 Reported by $reporter',
+                  '${formatTimeAgo(sighting.createdAt)} \u2022 ${sighting.status.name}',
                   style: AppTypography.caption,
                 ),
+                if (sighting.notes != null && sighting.notes!.isNotEmpty)
+                  Text(
+                    sighting.notes!,
+                    style: AppTypography.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
               ],
             ),
           ),
@@ -305,9 +378,9 @@ class AlertDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomAction() {
+  Widget _buildBottomAction(BuildContext context) {
     return Container(
-      padding: AppSpacing.paddingLg,
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppColors.background,
         boxShadow: [
@@ -321,10 +394,35 @@ class AlertDetailPage extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: AppButton(
-          text: '\uD83D\uDCF8 I Saw This Pet',
+          text: 'I Saw This Pet',
           type: AppButtonType.success,
-          onPressed: () {},
+          onPressed: () {
+            context.push('/report');
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorView(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.error_outline, size: 48, color: AppColors.danger),
+          const SizedBox(height: 12),
+          Text('Failed to load alert', style: AppTypography.h3),
+          const SizedBox(height: 8),
+          ElevatedButton(
+            onPressed: () => _alertCubit.loadAlertById(widget.alertId),
+            child: const Text('Retry'),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: () => context.pop(),
+            child: const Text('Go back'),
+          ),
+        ],
       ),
     );
   }

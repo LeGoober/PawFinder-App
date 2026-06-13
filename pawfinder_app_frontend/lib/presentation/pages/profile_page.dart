@@ -1,54 +1,210 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
+import '../../di/injection.dart';
+import '../../domain/entities/user.dart';
+import '../blocs/auth/auth_cubit.dart';
 import '../widgets/app_button.dart';
+import '../widgets/empty_state.dart';
+import '../widgets/skeleton_loader.dart';
+import '../widgets/stat_card.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
   @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late final AuthCubit _authCubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _authCubit = AuthCubit(
+      authRepository: getIt(),
+      authService: getIt(),
+    );
+    _authCubit.checkAuthStatus();
+  }
+
+  @override
+  void dispose() {
+    _authCubit.close();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
+    return BlocProvider.value(
+      value: _authCubit,
+      child: Scaffold(
         backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Profile',
-          style: AppTypography.h2.copyWith(color: AppColors.ink900),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            _buildUserInfoCard(),
-            AppSpacing.lg,
-            _buildSettingsList(),
-            AppSpacing.xl,
-            Padding(
-              padding: AppSpacing.paddingHorizontalLg,
-              child: AppButton(
-                text: 'Logout',
-                type: AppButtonType.danger,
-                onPressed: () {},
-              ),
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          elevation: 0,
+          title: Text(
+            'Profile',
+            style: AppTypography.h2.copyWith(color: AppColors.ink900),
+          ),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.settings_outlined,
+                  color: AppColors.ink700),
+              onPressed: () {
+                // Navigate to account settings
+              },
             ),
-            AppSpacing.xxxl,
           ],
+        ),
+        body: BlocBuilder<AuthCubit, AuthState>(
+          bloc: _authCubit,
+          builder: (context, state) {
+            if (state is AuthLoading) {
+              return const SkeletonListLoader(itemCount: 4);
+            }
+
+            if (state is AuthAuthenticated) {
+              return _buildAuthenticatedProfile(state.user);
+            }
+
+            if (state is AuthError) {
+              return Padding(
+                padding: const EdgeInsets.all(24),
+                child: EmptyState(
+                  icon: Icons.error_outline,
+                  title: 'Failed to load profile',
+                  subtitle: state.message,
+                  actionText: 'Retry',
+                  onAction: () => _authCubit.checkAuthStatus(),
+                ),
+              );
+            }
+
+            // AuthInitial — not logged in
+            return _buildNotLoggedIn();
+          },
         ),
       ),
     );
   }
 
-  Widget _buildUserInfoCard() {
+  Widget _buildAuthenticatedProfile(User user) {
+    final dateFormat = DateFormat('MMM yyyy');
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.only(bottom: 100),
+      child: Column(
+        children: [
+          // User info card
+          _buildUserInfoCard(user),
+          AppSpacing.lg,
+          // Stats row
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: StatCard(
+                    title: 'Rescuer Level',
+                    value: '${user.rescuerBadgeLevel}',
+                    icon: Icons.military_tech,
+                    color: AppColors.secondary,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: StatCard(
+                    title: 'Joined',
+                    value: dateFormat.format(user.createdAt),
+                    icon: Icons.calendar_today,
+                    color: AppColors.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          AppSpacing.xl,
+          // Settings list
+          _buildSettingsList(),
+          AppSpacing.xl,
+          // Logout
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: AppButton(
+              text: 'Logout',
+              type: AppButtonType.danger,
+              onPressed: () {
+                _authCubit.logout();
+                context.go('/');
+              },
+            ),
+          ),
+          AppSpacing.xxl,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotLoggedIn() {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Spacer(),
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.primary.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.person_outline,
+              size: 40,
+              color: AppColors.primary,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Sign in to view your profile',
+            style: AppTypography.h3,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Create alerts, track your pets, and help reunite lost pets in your community.',
+            style: AppTypography.body.copyWith(color: AppColors.ink500),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 24),
+          AppButton(
+            text: 'Sign In / Register',
+            onPressed: () {
+              context.go('/onboarding');
+            },
+          ),
+          const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUserInfoCard(User user) {
+    final badge = _getBadge(user.rescuerBadgeLevel);
+
     return Container(
-      margin: AppSpacing.paddingLg,
-      padding: AppSpacing.paddingXl,
+      margin: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.ink100),
         boxShadow: [
           BoxShadow(
@@ -60,44 +216,83 @@ class ProfilePage extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: AppSpacing.avatarSizeLarge,
-            height: AppSpacing.avatarSizeLarge,
-            decoration: BoxDecoration(
-              color: AppColors.primaryLight,
-              borderRadius:
-                  BorderRadius.circular(AppSpacing.radiusMd),
-            ),
-            child: const Icon(
-              Icons.person,
-              size: 36,
-              color: AppColors.primary,
-            ),
+          // Avatar with badge
+          Stack(
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: AppColors.primaryLight,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: const Icon(
+                  Icons.person,
+                  size: 36,
+                  color: AppColors.primary,
+                ),
+              ),
+              if (user.verified)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 20,
+                    height: 20,
+                    decoration: const BoxDecoration(
+                      color: AppColors.success,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.check,
+                      size: 14,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+            ],
           ),
-          AppSpacing.lg,
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Alex Johnson', style: AppTypography.h2),
-                AppSpacing.xs,
                 Text(
-                  'alex.johnson@email.com',
-                  style: AppTypography.bodySmall,
+                  user.displayName ?? 'Pet Lover',
+                  style: AppTypography.h2,
                 ),
-                AppSpacing.xs,
+                const SizedBox(height: 2),
+                if (badge != null)
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: badge.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      badge.label,
+                      style: AppTypography.caption.copyWith(
+                        color: badge.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                const SizedBox(height: 4),
                 Text(
-                  '\uD83D\uDC36 2 pets registered',
+                  'Member since ${DateFormat.yMMMM().format(user.createdAt)}',
                   style: AppTypography.caption.copyWith(
-                    color: AppColors.primary,
+                    color: AppColors.ink500,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(
-            Icons.edit_outlined,
-            color: AppColors.ink500,
+          IconButton(
+            icon: const Icon(Icons.edit_outlined, color: AppColors.ink500),
+            onPressed: () {
+              // Edit profile
+            },
           ),
         ],
       ),
@@ -109,85 +304,130 @@ class ProfilePage extends StatelessWidget {
       _SettingsItem(
         icon: Icons.pets_outlined,
         title: 'My Pets',
-        onTap: () {},
+        subtitle: 'Add and manage your registered pets',
+        onTap: () {
+          // Navigate to pets management
+        },
       ),
       _SettingsItem(
-        icon: Icons.settings_outlined,
+        icon: Icons.person_outline,
         title: 'Account Settings',
-        onTap: () {},
+        subtitle: 'Update profile, email, password',
+        onTap: () {
+          // Navigate to account settings
+        },
       ),
       _SettingsItem(
         icon: Icons.notifications_outlined,
         title: 'Notification Preferences',
+        subtitle: 'Manage alert notifications',
         onTap: () {},
       ),
       _SettingsItem(
         icon: Icons.lock_outline,
         title: 'Privacy Controls',
+        subtitle: 'Control your visibility and data',
         onTap: () {},
       ),
       _SettingsItem(
         icon: Icons.help_outline,
         title: 'Help & Support',
+        subtitle: 'FAQs, contact, report issues',
         onTap: () {},
       ),
     ];
 
     return Container(
-      margin: AppSpacing.paddingHorizontalLg,
+      margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: AppColors.background,
-        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.ink100),
       ),
       child: Column(
-        children: items.map((item) {
-          return InkWell(
-            onTap: item.onTap,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 16,
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    item.icon,
-                    size: AppSpacing.iconMedium,
-                    color: AppColors.ink700,
+        children: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          return Column(
+            children: [
+              if (index > 0)
+                const Divider(height: 1, indent: 56, color: AppColors.ink100),
+              InkWell(
+                onTap: item.onTap,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 14,
                   ),
-                  AppSpacing.md,
-                  Expanded(
-                    child: Text(
-                      item.title,
-                      style: AppTypography.bodyLarge.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.ink900,
+                  child: Row(
+                    children: [
+                      Icon(
+                        item.icon,
+                        size: 22,
+                        color: AppColors.ink700,
                       ),
-                    ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              item.title,
+                              style: AppTypography.body.copyWith(
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.ink900,
+                              ),
+                            ),
+                            if (item.subtitle != null)
+                              Text(
+                                item.subtitle!,
+                                style: AppTypography.caption.copyWith(
+                                  color: AppColors.ink500,
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.ink300,
+                      ),
+                    ],
                   ),
-                  const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.ink300,
-                  ),
-                ],
+                ),
               ),
-            ),
+            ],
           );
         }).toList(),
       ),
     );
+  }
+
+  _BadgeInfo? _getBadge(int level) {
+    if (level >= 3) return const _BadgeInfo('🏆 Verified Rescuer', AppColors.secondary);
+    if (level >= 2) return const _BadgeInfo('⭐ Active Helper', AppColors.primary);
+    if (level >= 1) return const _BadgeInfo('🐾 New Helper', AppColors.success);
+    return null;
   }
 }
 
 class _SettingsItem {
   final IconData icon;
   final String title;
+  final String? subtitle;
   final VoidCallback onTap;
 
   const _SettingsItem({
     required this.icon,
     required this.title,
+    this.subtitle,
     required this.onTap,
   });
+}
+
+class _BadgeInfo {
+  final String label;
+  final Color color;
+
+  const _BadgeInfo(this.label, this.color);
 }

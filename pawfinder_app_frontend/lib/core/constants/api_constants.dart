@@ -1,8 +1,26 @@
+import 'dart:io' show Platform;
+
 class ApiConstants {
   ApiConstants._();
 
-  static const String baseUrl = 'http://10.0.2.2:8080'; // Android emulator → host localhost
-  static const String wsUrl = 'ws://10.0.2.2:8080/ws';
+  /// Returns the correct base URL depending on platform.
+  /// Android emulator uses 10.0.2.2 to reach host localhost;
+  /// all other platforms (web, iOS, desktop) use localhost directly.
+  static String get baseUrl {
+    try {
+      if (Platform.isAndroid) return 'http://10.0.2.2:8080';
+    } catch (_) {
+      // Platform not available (e.g. web) — fall through
+    }
+    return 'http://localhost:8080';
+  }
+
+  static String get wsUrl {
+    try {
+      if (Platform.isAndroid) return 'ws://10.0.2.2:8080/ws';
+    } catch (_) {}
+    return 'ws://localhost:8080/ws';
+  }
 
   // Auth endpoints
   static const String register = '/api/v1/auth/register';

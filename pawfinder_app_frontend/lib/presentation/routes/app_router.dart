@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../core/theme/app_colors.dart';
-import '../../core/theme/app_spacing.dart';
-import '../../core/theme/app_typography.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../pages/splash_page.dart';
 import '../pages/onboarding_page.dart';
 import '../pages/home_page.dart';
+import '../pages/alerts_page.dart';
+import '../pages/report_sighting_page.dart';
+import '../pages/conversations_page.dart';
 import '../pages/create_alert_page.dart';
 import '../pages/alert_detail_page.dart';
 import '../pages/messaging_page.dart';
@@ -49,7 +49,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/alerts',
-              builder: (context, state) => const _AlertsPlaceholderPage(),
+              builder: (context, state) => const AlertsPage(),
             ),
           ],
         ),
@@ -57,7 +57,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/report',
-              builder: (context, state) => const _ReportPlaceholderPage(),
+              builder: (context, state) => const ReportSightingPage(),
             ),
           ],
         ),
@@ -65,7 +65,7 @@ final GoRouter appRouter = GoRouter(
           routes: [
             GoRoute(
               path: '/messages',
-              builder: (context, state) => const _MessagesPlaceholderPage(),
+              builder: (context, state) => const ConversationsPage(),
             ),
           ],
         ),
@@ -89,7 +89,7 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final id = state.pathParameters['id'] ?? '';
-        return const AlertDetailPage();
+        return AlertDetailPage(alertId: id);
       },
     ),
     GoRoute(
@@ -97,7 +97,7 @@ final GoRouter appRouter = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         final id = state.pathParameters['id'] ?? '';
-        return const MessagingPage();
+        return MessagingPage(conversationId: id);
       },
     ),
     GoRoute(
@@ -135,68 +135,3 @@ class _AppShell extends StatelessWidget {
   }
 }
 
-class _AlertsPlaceholderPage extends StatelessWidget {
-  const _AlertsPlaceholderPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Alerts',
-          style: AppTypography.h2.copyWith(color: AppColors.ink900),
-        ),
-      ),
-      body: const Center(
-        child: Text('Alerts page coming soon'),
-      ),
-    );
-  }
-}
-
-class _ReportPlaceholderPage extends StatelessWidget {
-  const _ReportPlaceholderPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Report',
-          style: AppTypography.h2.copyWith(color: AppColors.ink900),
-        ),
-      ),
-      body: const Center(
-        child: Text('Report page coming soon'),
-      ),
-    );
-  }
-}
-
-class _MessagesPlaceholderPage extends StatelessWidget {
-  const _MessagesPlaceholderPage();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        title: Text(
-          'Messages',
-          style: AppTypography.h2.copyWith(color: AppColors.ink900),
-        ),
-      ),
-      body: const Center(
-        child: Text('Messages page coming soon'),
-      ),
-    );
-  }
-}

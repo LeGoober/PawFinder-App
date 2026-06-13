@@ -1,71 +1,18 @@
 import 'package:dartz/dartz.dart';
 
+import '../../core/constants/api_constants.dart';
+import '../../core/errors/exceptions.dart';
 import '../../core/errors/failures.dart';
+import '../../data/datasources/remote/api_client.dart';
+import '../../data/models/alert_model.dart';
 import '../../domain/entities/alert.dart';
 import '../../domain/repositories/alert_repository.dart';
 
-/// Mock implementation of [AlertRepository] for development.
-///
-/// Returns three static sample alerts near "Downtown" with varying
-/// distances and reward amounts.  Each call is delayed by 1 second.
+/// Real API implementation of [AlertRepository].
 class AlertRepositoryImpl implements AlertRepository {
-  // ---- Mock data ----------------------------------------------------
-  static final List<Alert> _mockAlerts = [
-    Alert(
-      id: 'alt_1001',
-      petId: 'pet_2001',
-      petName: 'Max',
-      species: 'Dog',
-      status: AlertStatus.active,
-      fuzzedLat: -26.2041, // Johannesburg CBD approx
-      fuzzedLng: 28.0473,
-      lastSeenAddress: 'Cnr Pritchard & Rissik St, Johannesburg CBD',
-      description: 'Brown Labrador, red collar with silver tag. Very friendly.',
-      rewardAmount: 1500,
-      rewardCurrency: 'ZAR',
-      geofenceRadiusKm: 3.0,
-      viewCount: 42,
-      createdAt: DateTime(2026, 6, 4, 8, 30),
-      expiresAt: DateTime(2026, 7, 4, 8, 30),
-    ),
-    Alert(
-      id: 'alt_1002',
-      petId: 'pet_2002',
-      petName: 'Luna',
-      species: 'Cat',
-      status: AlertStatus.active,
-      fuzzedLat: -26.2010,
-      fuzzedLng: 28.0400,
-      lastSeenAddress: '75 De Korte St, Braamfontein',
-      description: 'Black cat, green eyes, white patch on chest.',
-      rewardAmount: 800,
-      rewardCurrency: 'ZAR',
-      geofenceRadiusKm: 2.0,
-      viewCount: 27,
-      createdAt: DateTime(2026, 6, 5, 14, 15),
-      expiresAt: DateTime(2026, 7, 5, 14, 15),
-    ),
-    Alert(
-      id: 'alt_1003',
-      petId: 'pet_2003',
-      petName: 'Buddy',
-      species: 'Dog',
-      status: AlertStatus.active,
-      fuzzedLat: -26.2070,
-      fuzzedLng: 28.0520,
-      lastSeenAddress: '1 Fox St, Maboneng Precinct',
-      description:
-          'Golden Cocker Spaniel, blue bandana. Answers to "Buddy".',
-      rewardAmount: 2000,
-      rewardCurrency: 'ZAR',
-      geofenceRadiusKm: 5.0,
-      viewCount: 63,
-      createdAt: DateTime(2026, 6, 3, 10, 0),
-      expiresAt: DateTime(2026, 7, 3, 10, 0),
-    ),
-  ];
+  final ApiClient _client;
 
-  // ---- API ----------------------------------------------------------
+  AlertRepositoryImpl({required ApiClient client}) : _client = client;
 
   @override
   Future<Either<Failure, Alert>> createAlert({
@@ -78,28 +25,24 @@ class AlertRepositoryImpl implements AlertRepository {
     String rewardCurrency = 'ZAR',
     double geofenceRadiusKm = 2.0,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    final now = DateTime.now();
-    final alert = Alert(
-      id: 'alt_${now.millisecondsSinceEpoch}',
-      petId: petId,
-      petName: 'New Pet',
-      species: 'Unknown',
-      status: AlertStatus.active,
-      fuzzedLat: lat,
-      fuzzedLng: lng,
-      lastSeenAddress: lastSeenAddress,
-      description: description,
-      rewardAmount: rewardAmount,
-      rewardCurrency: rewardCurrency,
-      geofenceRadiusKm: geofenceRadiusKm,
-      viewCount: 0,
-      createdAt: now,
-      expiresAt: now.add(const Duration(days: 30)),
-    );
-
-    return Right(alert);
+    try {
+      final json = await _client.post(ApiConstants.alerts, data: {
+        'petId': petId,
+        'lastSeenLat': lat,
+        'lastSeenLng': lng,
+        'lastSeenAddress': lastSeenAddress,
+        if (description != null) 'description': description,
+        'rewardAmount': rewardAmount,
+        'rewardCurrency': rewardCurrency,
+        'geofenceRadiusKm': geofenceRadiusKm,
+      });
+      final alert = AlertModel.fromJson(json as Map<String, dynamic>);
+      return Right(alert.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
@@ -108,74 +51,59 @@ class AlertRepositoryImpl implements AlertRepository {
     required double lng,
     double radiusKm = 5.0,
   }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return Right(_mockAlerts);
+    try {
+      final json = await _client.get(ApiConstants.alertsNearby, queryParameters: {
+        'lat': lat.toString(),
+        'lng': lng.toString(),
+        'radiusKm': radiusKm.toString(),
+      });
+      final list = (json as List<dynamic>)
+          .map((e) => AlertModel.fromJson(e as Map<String, dynamic>).toEntity())
+          .toList();
+      return Right(list);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
   Future<Either<Failure, Alert>> getAlertById(String id) async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    final alert = _mockAlerts.firstWhere(
-      (a) => a.id == id,
-      orElse: () => _mockAlerts.first,
-    );
-    return Right(alert);
+    try {
+      final json = await _client.get(ApiConstants.alertById(id));
+      final alert = AlertModel.fromJson(json as Map<String, dynamic>);
+      return Right(alert.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
   Future<Either<Failure, Alert>> resolveAlert(String id) async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    final alert = _mockAlerts.firstWhere(
-      (a) => a.id == id,
-      orElse: () => _mockAlerts.first,
-    );
-    final resolved = Alert(
-      id: alert.id,
-      petId: alert.petId,
-      petName: alert.petName,
-      species: alert.species,
-      status: AlertStatus.resolved,
-      fuzzedLat: alert.fuzzedLat,
-      fuzzedLng: alert.fuzzedLng,
-      lastSeenAddress: alert.lastSeenAddress,
-      description: alert.description,
-      rewardAmount: alert.rewardAmount,
-      rewardCurrency: alert.rewardCurrency,
-      geofenceRadiusKm: alert.geofenceRadiusKm,
-      viewCount: alert.viewCount,
-      createdAt: alert.createdAt,
-      expiresAt: alert.expiresAt,
-    );
-    return Right(resolved);
+    try {
+      final json = await _client.put('${ApiConstants.alertById(id)}/resolve');
+      final alert = AlertModel.fromJson(json as Map<String, dynamic>);
+      return Right(alert.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 
   @override
   Future<Either<Failure, Alert>> cancelAlert(String id) async {
-    await Future.delayed(const Duration(seconds: 1));
-
-    final alert = _mockAlerts.firstWhere(
-      (a) => a.id == id,
-      orElse: () => _mockAlerts.first,
-    );
-    final cancelled = Alert(
-      id: alert.id,
-      petId: alert.petId,
-      petName: alert.petName,
-      species: alert.species,
-      status: AlertStatus.cancelled,
-      fuzzedLat: alert.fuzzedLat,
-      fuzzedLng: alert.fuzzedLng,
-      lastSeenAddress: alert.lastSeenAddress,
-      description: alert.description,
-      rewardAmount: alert.rewardAmount,
-      rewardCurrency: alert.rewardCurrency,
-      geofenceRadiusKm: alert.geofenceRadiusKm,
-      viewCount: alert.viewCount,
-      createdAt: alert.createdAt,
-      expiresAt: alert.expiresAt,
-    );
-    return Right(cancelled);
+    try {
+      final json = await _client.put('${ApiConstants.alertById(id)}/cancel');
+      final alert = AlertModel.fromJson(json as Map<String, dynamic>);
+      return Right(alert.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
   }
 }

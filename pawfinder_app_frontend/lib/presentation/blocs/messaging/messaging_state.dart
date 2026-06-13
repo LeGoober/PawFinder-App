@@ -15,8 +15,17 @@ class MessagingLoading extends MessagingState {
   const MessagingLoading();
 }
 
+class ConversationsLoaded extends MessagingState {
+  final List<Conversation> conversations;
+
+  const ConversationsLoaded({required this.conversations});
+
+  @override
+  List<Object?> get props => [conversations];
+}
+
 class MessagesLoaded extends MessagingState {
-  final List<_MockMessage> messages;
+  final List<Message> messages;
 
   const MessagesLoaded({required this.messages});
 
@@ -25,7 +34,12 @@ class MessagesLoaded extends MessagingState {
 }
 
 class MessageSent extends MessagingState {
-  const MessageSent();
+  final Message message;
+
+  const MessageSent({required this.message});
+
+  @override
+  List<Object?> get props => [message];
 }
 
 class MessagingError extends MessagingState {
