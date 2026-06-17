@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
@@ -8,6 +9,7 @@ import '../../core/theme/app_typography.dart';
 import '../../di/injection.dart';
 import '../blocs/alert/alert_cubit.dart';
 import '../widgets/alert_card.dart';
+import '../widgets/alert_map_widget.dart';
 import '../widgets/info_banner.dart';
 import '../widgets/glass_surface.dart';
 import '../widgets/skeleton_loader.dart';
@@ -75,8 +77,11 @@ class _HomePageState extends State<HomePage> {
                           ),
                         ),
                         AppSpacing.md,
-                        // Map area
-                        _buildGlassMapArea(),
+                        // Map area with real alerts
+                        if (state.alerts.isNotEmpty)
+                          _buildMapArea(state),
+                        if (state.alerts.isEmpty)
+                          _buildEmptyMapArea(),
                         AppSpacing.lg,
                         // Section header
                         _buildSectionHeader('Nearby Alerts', 'See all'),
@@ -189,6 +194,53 @@ class _HomePageState extends State<HomePage> {
           onPressed: () {},
         ),
       ],
+    );
+  }
+
+  /// Build the interactive map with alert markers from loaded state.
+  Widget _buildMapArea(AlertsLoaded state) {
+    // Compute map center from alert coordinates
+    final LatLng center;
+    if (state.alerts.isNotEmpty) {
+      final avgLat = state.alerts
+          .map((a) => a.fuzzedLat)
+          .reduce((a, b) => a + b) /
+          state.alerts.length;
+      final avgLng = state.alerts
+          .map((a) => a.fuzzedLng)
+          .reduce((a, b) => a + b) /
+          state.alerts.length;
+      center = LatLng(avgLat, avgLng);
+    } else {
+      center = const LatLng(-26.2041, 28.0473);
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        height: 260,
+        child: AlertMapWidget(
+          alerts: state.alerts,
+          center: center,
+          defaultZoom: state.alerts.length == 1 ? 15.0 : 12.0,
+          onAlertTap: (alert) => context.push('/alert/${alert.id}'),
+        ),
+      ),
+    );
+  }
+
+  /// Fallback map area when no alerts are loaded.
+  Widget _buildEmptyMapArea() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: SizedBox(
+        height: 260,
+        child: AlertMapWidget(
+          alerts: const [],
+          center: const LatLng(-26.2041, 28.0473),
+          defaultZoom: 12.0,
+        ),
+      ),
     );
   }
 

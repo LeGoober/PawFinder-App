@@ -3,7 +3,24 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+
 import '../core/constants/api_constants.dart';
+
+/// Google Sign-In user data returned after a successful sign-in.
+class GoogleSignInUser {
+  final String id;
+  final String email;
+  final String? displayName;
+  final String? photoUrl;
+
+  const GoogleSignInUser({
+    required this.id,
+    required this.email,
+    this.displayName,
+    this.photoUrl,
+  });
+}
 
 class AuthService {
   static const _tokenKey = 'auth_token';
@@ -11,14 +28,56 @@ class AuthService {
   static const _userKey = 'auth_user';
 
   final FlutterSecureStorage _storage;
-  final StreamController<bool> _authStateController = StreamController<bool>.broadcast();
+  final StreamController<bool> _authStateController =
+      StreamController<bool>.broadcast();
 
-  AuthService() : _storage = const FlutterSecureStorage();
+  // Google Sign-In instance — configured for web + mobile
+  late final GoogleSignIn _googleSignIn;
+
+  AuthService() : _storage = const FlutterSecureStorage() {
+    _googleSignIn = GoogleSignIn(
+      scopes: ['email', 'profile'],
+    );
+  }
 
   /// Initialize the service.
   Future<void> initialize() async {}
 
-  // ── Token Management ─────────────────────────────────────────────
+  // ── Google Sign-In ──────────────────────────────────────────────
+
+  /// Starts the Google Sign-In flow. Returns user data on success,
+  /// or null if the user cancelled.
+  Future<GoogleSignInUser?> signInWithGoogle() async {
+    try {
+      final account = await _googleSignIn.signIn();
+      if (account == null) return null;
+
+      // Re-authenticate to get fresh credentials with ID token
+      final auth = await account.authentication;
+
+      return GoogleSignInUser(
+        id: account.id,
+        email: account.email,
+        displayName: account.displayName,
+        photoUrl: account.photoUrl,
+      );
+    } catch (e) {
+      // User cancelled or network error — rethrow for the cubit to handle
+      rethrow;
+    }
+  }
+
+  /// Signs out of Google and clears local auth state.
+  Future<void> signOut() async {
+    try {
+      await _googleSignIn.signOut();
+    } catch (_) {
+      // Best-effort — may fail if already signed out
+    }
+    await deleteToken();
+  }
+
+  // ── Token Management ────────────────────────────────────────────
 
   /// Persist the access + refresh tokens to secure device storage.
   Future<void> saveTokens({
@@ -29,12 +88,6 @@ class AuthService {
     if (refreshToken != null) {
       await _storage.write(key: _refreshTokenKey, value: refreshToken);
     }
-    _authStateController.add(true);
-  }
-
-  /// Persist the JWT token (backwards-compatible).
-  Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
     _authStateController.add(true);
   }
 
@@ -49,7 +102,8 @@ class AuthService {
   }
 
   /// Attempt to refresh the access token using the stored refresh token.
-  /// Returns the new access token on success, or null on failure.
+  /// The backend expects the refresh token as a Bearer token in the
+  /// Authorization header.
   Future<String?> refreshToken() async {
     try {
       final refresh = await getRefreshToken();
@@ -63,7 +117,9 @@ class AuthService {
 
       final response = await dio.post(
         ApiConstants.refresh,
-        data: {'refreshToken': refresh},
+        options: Options(headers: {
+          'Authorization': 'Bearer $refresh',
+        }),
       );
 
       final data = response.data as Map<String, dynamic>;
@@ -87,13 +143,13 @@ class AuthService {
     _authStateController.add(false);
   }
 
-  /// Convenience check – `true` when a token is currently stored.
+  /// Convenience check — `true` when a token is currently stored.
   Future<bool> isAuthenticated() async {
     final token = await getToken();
     return token != null && token.isNotEmpty;
   }
 
-  // ── User Profile Cache ───────────────────────────────────────────
+  // ── User Profile Cache ──────────────────────────────────────────
 
   /// Cache the current user profile as JSON.
   Future<void> saveUser(Map<String, dynamic> user) async {
@@ -112,7 +168,7 @@ class AuthService {
     await _storage.delete(key: _userKey);
   }
 
-  // ── Stream ───────────────────────────────────────────────────────
+  // ── Stream ──────────────────────────────────────────────────────
 
   /// A broadcast stream that emits `true` when a user signs in and
   /// `false` when they sign out.

@@ -8,16 +8,16 @@ import '../../repositories/auth_repository.dart';
 
 /// Params for the [LoginUseCase].
 class LoginParams extends Equatable {
-  final String email;
-  final String password;
+  final String authProvider;
+  final String authId;
 
-  const LoginParams({required this.email, required this.password});
+  const LoginParams({required this.authProvider, required this.authId});
 
   @override
-  List<Object?> get props => [email, password];
+  List<Object?> get props => [authProvider, authId];
 }
 
-/// Authenticates a user with email and password.
+/// Authenticates a user via an OAuth provider.
 class LoginUseCase extends UseCase<User, LoginParams> {
   final AuthRepository _repository;
 
@@ -26,8 +26,8 @@ class LoginUseCase extends UseCase<User, LoginParams> {
   @override
   Future<Either<Failure, User>> call(LoginParams params) {
     return _repository.login(
-      email: params.email,
-      password: params.password,
+      authProvider: params.authProvider,
+      authId: params.authId,
     );
   }
 }

@@ -17,6 +17,7 @@ public class UserDTO {
     private UUID id;
     private String authProvider;
     private String displayName;
+    private String email;
     private boolean verified;
     private int rescuerBadgeLevel;
     private LocalDateTime createdAt;

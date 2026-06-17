@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
-import '../../di/injection.dart';
 import '../../domain/entities/user.dart';
 import '../blocs/auth/auth_cubit.dart';
 import '../widgets/app_button.dart';
@@ -14,98 +13,82 @@ import '../widgets/empty_state.dart';
 import '../widgets/skeleton_loader.dart';
 import '../widgets/stat_card.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  late final AuthCubit _authCubit;
-
-  @override
-  void initState() {
-    super.initState();
-    _authCubit = AuthCubit(
-      authRepository: getIt(),
-      authService: getIt(),
-    );
-    _authCubit.checkAuthStatus();
-  }
-
-  @override
-  void dispose() {
-    _authCubit.close();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _authCubit,
-      child: Scaffold(
+    final authCubit = context.read<AuthCubit>();
+
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
         backgroundColor: AppColors.background,
-        appBar: AppBar(
-          backgroundColor: AppColors.background,
-          elevation: 0,
-          title: Text(
-            'Profile',
-            style: AppTypography.h2.copyWith(color: AppColors.ink900),
+        elevation: 0,
+        title: Text(
+          'Profile',
+          style: AppTypography.h2.copyWith(color: AppColors.ink900),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, color: AppColors.ink700),
+            onPressed: () {},
           ),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.settings_outlined,
-                  color: AppColors.ink700),
-              onPressed: () {
-                // Navigate to account settings
+        ],
+      ),
+      body: BlocBuilder<AuthCubit, AuthState>(
+        builder: (context, state) {
+          if (state is AuthLoading) {
+            return const SkeletonListLoader(itemCount: 4);
+          }
+
+          if (state is AuthAuthenticated) {
+            return _AuthenticatedProfile(
+              user: state.user,
+              onLogout: () {
+                authCubit.logout();
+                context.go('/');
               },
-            ),
-          ],
-        ),
-        body: BlocBuilder<AuthCubit, AuthState>(
-          bloc: _authCubit,
-          builder: (context, state) {
-            if (state is AuthLoading) {
-              return const SkeletonListLoader(itemCount: 4);
-            }
+            );
+          }
 
-            if (state is AuthAuthenticated) {
-              return _buildAuthenticatedProfile(state.user);
-            }
+          if (state is AuthError) {
+            return Padding(
+              padding: const EdgeInsets.all(24),
+              child: EmptyState(
+                icon: Icons.error_outline,
+                title: 'Failed to load profile',
+                subtitle: state.message,
+                actionText: 'Retry',
+                onAction: () => authCubit.checkAuthStatus(),
+              ),
+            );
+          }
 
-            if (state is AuthError) {
-              return Padding(
-                padding: const EdgeInsets.all(24),
-                child: EmptyState(
-                  icon: Icons.error_outline,
-                  title: 'Failed to load profile',
-                  subtitle: state.message,
-                  actionText: 'Retry',
-                  onAction: () => _authCubit.checkAuthStatus(),
-                ),
-              );
-            }
-
-            // AuthInitial — not logged in
-            return _buildNotLoggedIn();
-          },
-        ),
+          // AuthInitial — not logged in
+          return _NotLoggedIn();
+        },
       ),
     );
   }
+}
 
-  Widget _buildAuthenticatedProfile(User user) {
+class _AuthenticatedProfile extends StatelessWidget {
+  final User user;
+  final VoidCallback onLogout;
+
+  const _AuthenticatedProfile({required this.user, required this.onLogout});
+
+  @override
+  Widget build(BuildContext context) {
     final dateFormat = DateFormat('MMM yyyy');
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 100),
       child: Column(
         children: [
-          // User info card
-          _buildUserInfoCard(user),
+          _UserInfoCard(user: user),
           AppSpacing.lg,
-          // Stats row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Row(
@@ -131,19 +114,14 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           AppSpacing.xl,
-          // Settings list
-          _buildSettingsList(),
+          _SettingsList(),
           AppSpacing.xl,
-          // Logout
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: AppButton(
               text: 'Logout',
               type: AppButtonType.danger,
-              onPressed: () {
-                _authCubit.logout();
-                context.go('/');
-              },
+              onPressed: onLogout,
             ),
           ),
           AppSpacing.xxl,
@@ -151,8 +129,11 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
+}
 
-  Widget _buildNotLoggedIn() {
+class _NotLoggedIn extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -173,10 +154,7 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            'Sign in to view your profile',
-            style: AppTypography.h3,
-          ),
+          Text('Sign in to view your profile', style: AppTypography.h3),
           const SizedBox(height: 8),
           Text(
             'Create alerts, track your pets, and help reunite lost pets in your community.',
@@ -186,17 +164,22 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 24),
           AppButton(
             text: 'Sign In / Register',
-            onPressed: () {
-              context.go('/onboarding');
-            },
+            onPressed: () => context.go('/login'),
           ),
           const Spacer(),
         ],
       ),
     );
   }
+}
 
-  Widget _buildUserInfoCard(User user) {
+class _UserInfoCard extends StatelessWidget {
+  final User user;
+
+  const _UserInfoCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
     final badge = _getBadge(user.rescuerBadgeLevel);
 
     return Container(
@@ -216,7 +199,6 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
       child: Row(
         children: [
-          // Avatar with badge
           Stack(
             children: [
               Container(
@@ -290,46 +272,56 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: AppColors.ink500),
-            onPressed: () {
-              // Edit profile
-            },
+            onPressed: () {},
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSettingsList() {
+  _BadgeInfo? _getBadge(int level) {
+    if (level >= 3) {
+      return const _BadgeInfo('🏆 Verified Rescuer', AppColors.secondary);
+    }
+    if (level >= 2) {
+      return const _BadgeInfo('⭐ Active Helper', AppColors.primary);
+    }
+    if (level >= 1) {
+      return const _BadgeInfo('🐾 New Helper', AppColors.success);
+    }
+    return null;
+  }
+}
+
+class _SettingsList extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
     final items = [
-      _SettingsItem(
+      _SettingsItemData(
         icon: Icons.pets_outlined,
         title: 'My Pets',
         subtitle: 'Add and manage your registered pets',
-        onTap: () {
-          // Navigate to pets management
-        },
+        onTap: () {},
       ),
-      _SettingsItem(
+      _SettingsItemData(
         icon: Icons.person_outline,
         title: 'Account Settings',
         subtitle: 'Update profile, email, password',
-        onTap: () {
-          // Navigate to account settings
-        },
+        onTap: () {},
       ),
-      _SettingsItem(
+      _SettingsItemData(
         icon: Icons.notifications_outlined,
         title: 'Notification Preferences',
         subtitle: 'Manage alert notifications',
         onTap: () {},
       ),
-      _SettingsItem(
+      _SettingsItemData(
         icon: Icons.lock_outline,
         title: 'Privacy Controls',
         subtitle: 'Control your visibility and data',
         onTap: () {},
       ),
-      _SettingsItem(
+      _SettingsItemData(
         icon: Icons.help_outline,
         title: 'Help & Support',
         subtitle: 'FAQs, contact, report issues',
@@ -361,11 +353,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        item.icon,
-                        size: 22,
-                        color: AppColors.ink700,
-                      ),
+                      Icon(item.icon, size: 22, color: AppColors.ink700),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
@@ -388,10 +376,7 @@ class _ProfilePageState extends State<ProfilePage> {
                           ],
                         ),
                       ),
-                      const Icon(
-                        Icons.chevron_right,
-                        color: AppColors.ink300,
-                      ),
+                      const Icon(Icons.chevron_right, color: AppColors.ink300),
                     ],
                   ),
                 ),
@@ -402,22 +387,15 @@ class _ProfilePageState extends State<ProfilePage> {
       ),
     );
   }
-
-  _BadgeInfo? _getBadge(int level) {
-    if (level >= 3) return const _BadgeInfo('🏆 Verified Rescuer', AppColors.secondary);
-    if (level >= 2) return const _BadgeInfo('⭐ Active Helper', AppColors.primary);
-    if (level >= 1) return const _BadgeInfo('🐾 New Helper', AppColors.success);
-    return null;
-  }
 }
 
-class _SettingsItem {
+class _SettingsItemData {
   final IconData icon;
   final String title;
   final String? subtitle;
   final VoidCallback onTap;
 
-  const _SettingsItem({
+  const _SettingsItemData({
     required this.icon,
     required this.title,
     this.subtitle,

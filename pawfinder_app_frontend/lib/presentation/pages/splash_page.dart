@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
+import '../../di/injection.dart';
+import '../blocs/auth/auth_cubit.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -16,6 +19,7 @@ class _SplashPageState extends State<SplashPage>
     with SingleTickerProviderStateMixin {
   late final AnimationController _pawController;
   late final Animation<double> _pawAnim;
+  bool _checked = false;
 
   @override
   void initState() {
@@ -29,11 +33,33 @@ class _SplashPageState extends State<SplashPage>
     );
     _pawController.repeat();
 
-    Future.delayed(const Duration(milliseconds: 2200), () {
+    // Check auth status, then navigate
+    _checkAndNavigate();
+  }
+
+  Future<void> _checkAndNavigate() async {
+    // Give the animation a moment to breathe
+    await Future.delayed(const Duration(milliseconds: 1800));
+
+    if (!mounted) return;
+    _checked = true;
+
+    try {
+      final authCubit = getIt<AuthCubit>();
+      await authCubit.checkAuthStatus();
+
+      if (!mounted) return;
+
+      if (authCubit.isAuthenticated) {
+        context.go('/home');
+      } else {
+        context.go('/onboarding');
+      }
+    } catch (_) {
       if (mounted) {
         context.go('/onboarding');
       }
-    });
+    }
   }
 
   @override
@@ -190,7 +216,8 @@ class _PawLoadingDots extends StatelessWidget {
           children: List.generate(4, (i) {
             final delay = i * 0.2;
             final value = (controller.value - delay).clamp(0.0, 1.0);
-            final scale = 0.5 + (value < 0.5 ? value * 1.0 : (1.0 - value) * 1.0);
+            final scale =
+                0.5 + (value < 0.5 ? value * 1.0 : (1.0 - value) * 1.0);
             final opacity = value < 0.2
                 ? value * 5.0
                 : value < 0.8

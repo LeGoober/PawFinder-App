@@ -7,6 +7,7 @@ import com.pawfinder.auth.repository.UserRepository;
 import com.pawfinder.shared.domain.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final JwtConfig jwtConfig;
+    private final PasswordEncoder passwordEncoder;
+
+    // ── Phone auth (existing) ──────────────────────────────────
 
     @Transactional
     public UserDTO register(String phoneNumber, String displayName) {
@@ -40,7 +44,7 @@ public class AuthService {
                 .build();
 
         user = userRepository.save(user);
-        log.info("Registered new user with authId: {}", user.getAuthId());
+        log.info("Registered new user (phone): {}", user.getAuthId());
 
         return toDTO(user);
     }
@@ -56,6 +60,50 @@ public class AuthService {
 
         return generateTokenResponse(user);
     }
+
+    // ── Email + Password auth (new) ────────────────────────────
+
+    @Transactional
+    public UserDTO registerWithEmail(String email, String password, String displayName) {
+        if (userRepository.existsByEmail(email)) {
+            throw new RuntimeException("An account with this email already exists");
+        }
+
+        User user = User.builder()
+                .authProvider("email")
+                .authId(UUID.randomUUID().toString())
+                .email(email.toLowerCase().trim())
+                .passwordHash(passwordEncoder.encode(password))
+                .displayName(displayName != null && !displayName.isBlank()
+                        ? displayName
+                        : email.split("@")[0])
+                .verified(true) // Email-based: verified on creation
+                .rescuerBadgeLevel(0)
+                .build();
+
+        user = userRepository.save(user);
+        log.info("Registered new user (email): {}", email);
+
+        return toDTO(user);
+    }
+
+    @Transactional
+    public TokenResponse loginWithEmail(String email, String password) {
+        User user = userRepository.findByEmail(email.toLowerCase().trim())
+                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        user.setLastActive(LocalDateTime.now());
+        userRepository.save(user);
+
+        log.info("User logged in (email): {}", email);
+        return generateTokenResponse(user);
+    }
+
+    // ── Provider auth (Google, etc.) ───────────────────────────
 
     @Transactional
     public TokenResponse login(String authProvider, String authId) {
@@ -78,6 +126,8 @@ public class AuthService {
         return generateTokenResponse(user);
     }
 
+    // ── Token / Profile ────────────────────────────────────────
+
     public TokenResponse refreshToken(String refreshToken) {
         if (!jwtService.validateToken(refreshToken)) {
             throw new RuntimeException("Invalid or expired refresh token");
@@ -96,6 +146,8 @@ public class AuthService {
         return toDTO(user);
     }
 
+    // ── Internal ───────────────────────────────────────────────
+
     private TokenResponse generateTokenResponse(User user) {
         String accessToken = jwtService.generateAccessToken(user.getId());
         String refreshToken = jwtService.generateRefreshToken(user.getId());
@@ -107,6 +159,7 @@ public class AuthService {
                 .id(user.getId())
                 .authProvider(user.getAuthProvider())
                 .displayName(user.getDisplayName())
+                .email(user.getEmail())
                 .verified(user.isVerified())
                 .rescuerBadgeLevel(user.getRescuerBadgeLevel())
                 .createdAt(user.getCreatedAt())

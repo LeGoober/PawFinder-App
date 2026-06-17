@@ -1,0 +1,374 @@
+# ────────────────────────────────────────────────────────────
+# PawFinder V0.1 — Render Blueprint
+# ────────────────────────────────────────────────────────────
+# Deploy: push to GitHub → Render auto-deploys via this file.
+# Managed services used instead of containerized infra.
+#
+# Services:
+#   1. Frontend    — Flutter Web via Nginx (Static Site)
+#   2. API Gateway — Spring Boot Web Service
+#   3. Auth        — Spring Boot Web Service
+#   4. Alert       — Spring Boot Web Service (core service)
+#   5. Messaging   — Spring Boot Web Service
+#   6. Reward      — Spring Boot Web Service
+#   7. Media       — Spring Boot Web Service
+#   8. Analytics   — Spring Boot Web Service
+#   9. Matching    — Spring Boot Web Service
+#  10. Notification— Spring Boot Web Service
+#
+# Note: For cost efficiency on V0.1, consider consolidating
+#       services 4-10 into fewer deployments using Spring
+#       profiles. See docs/DEPLOYMENT.md for details.
+# ────────────────────────────────────────────────────────────
+
+services:
+  # ── Frontend ───────────────────────────────────────────────
+  - type: web
+    name: pawfinder-frontend
+    runtime: static
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder_app_frontend
+    buildCommand: flutter build web --release
+    staticPublishPath: build/web
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: FLUTTER_VERSION
+        value: "3.24.0"
+
+  # ── API Gateway ────────────────────────────────────────────
+  - type: web
+    name: pawfinder-api-gateway
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-api-gateway -t gateway .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: AUTH_SERVICE_URL
+        fromService:
+          name: pawfinder-auth-service
+          type: web
+          property: hostport
+      - key: ALERT_SERVICE_URL
+        fromService:
+          name: pawfinder-alert-service
+          type: web
+          property: hostport
+      - key: MESSAGING_SERVICE_URL
+        fromService:
+          name: pawfinder-messaging-service
+          type: web
+          property: hostport
+      - key: REWARD_SERVICE_URL
+        fromService:
+          name: pawfinder-reward-service
+          type: web
+          property: hostport
+      - key: MEDIA_SERVICE_URL
+        fromService:
+          name: pawfinder-media-service
+          type: web
+          property: hostport
+      - key: ANALYTICS_SERVICE_URL
+        fromService:
+          name: pawfinder-analytics-service
+          type: web
+          property: hostport
+      - key: MATCHING_SERVICE_URL
+        fromService:
+          name: pawfinder-matching-service
+          type: web
+          property: hostport
+      - key: NOTIFICATION_SERVICE_URL
+        fromService:
+          name: pawfinder-notification-service
+          type: web
+          property: hostport
+      - key: REDIS_URL
+        fromService:
+          name: pawfinder-redis
+          type: redis
+          property: connectionString
+      - key: SPRING_REDIS_HOST
+        fromService:
+          name: pawfinder-redis
+          type: redis
+          property: host
+      - key: SPRING_REDIS_PORT
+        fromService:
+          name: pawfinder-redis
+          type: redis
+          property: port
+    disk:
+      name: gateway-logs
+      mountPath: /app/logs
+
+  # ── Auth Service ───────────────────────────────────────────
+  - type: web
+    name: pawfinder-auth-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-auth-service -t auth .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pawfinder-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pawfinder-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pawfinder-db
+          property: password
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+
+  # ── Alert Service (core) ───────────────────────────────────
+  - type: web
+    name: pawfinder-alert-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-alert-service -t alert .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pawfinder-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pawfinder-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pawfinder-db
+          property: password
+      - key: REDIS_URL
+        fromService:
+          name: pawfinder-redis
+          type: redis
+          property: connectionString
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Messaging Service ──────────────────────────────────────
+  - type: web
+    name: pawfinder-messaging-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-messaging-service -t messaging .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pawfinder-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pawfinder-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pawfinder-db
+          property: password
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Reward Service ─────────────────────────────────────────
+  - type: web
+    name: pawfinder-reward-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-reward-service -t reward .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pawfinder-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pawfinder-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pawfinder-db
+          property: password
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Media Service ──────────────────────────────────────────
+  - type: web
+    name: pawfinder-media-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-media-service -t media .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: AWS_REGION
+        value: us-east-1
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Analytics Service ──────────────────────────────────────
+  - type: web
+    name: pawfinder-analytics-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-analytics-service -t analytics .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pawfinder-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pawfinder-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pawfinder-db
+          property: password
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Matching Service ───────────────────────────────────────
+  - type: web
+    name: pawfinder-matching-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-matching-service -t matching .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_REKOGNITION_REGION
+        value: us-east-1
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Notification Service ───────────────────────────────────
+  - type: web
+    name: pawfinder-notification-service
+    runtime: docker
+    repo: https://github.com/roris/PawsFinder
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-notification-service -t notification .
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: FIREBASE_SERVER_KEY
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+
+  # ── Managed PostgreSQL + PostGIS ───────────────────────────
+  - type: database
+    name: pawfinder-db
+    databaseName: pawfinder
+    plan: starter
+    ipAllowList: []
+
+  # ── Managed Redis ──────────────────────────────────────────
+  - type: redis
+    name: pawfinder-redis
+    plan: starter
+    ipAllowList: []

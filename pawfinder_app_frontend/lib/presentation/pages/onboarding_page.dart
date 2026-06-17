@@ -17,8 +17,8 @@ class _OnboardingPageState extends State<OnboardingPage> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  void _goToHome() {
-    context.go('/home');
+  void _goToLogin() {
+    context.go('/login');
   }
 
   @override
@@ -77,7 +77,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
               if (_currentPage == 2)
                 AppButton(
                   text: 'Get Started',
-                  onPressed: _goToHome,
+                  onPressed: _goToLogin,
                 )
               else
                 TextButton(

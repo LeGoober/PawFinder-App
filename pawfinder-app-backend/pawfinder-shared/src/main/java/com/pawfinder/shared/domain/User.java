@@ -28,8 +28,15 @@ public class User {
     @Column(name = "phone_hash")
     private String phoneHash;
 
+    @Column(name = "email")
+    @Email
+    private String email;
+
     @Column(name = "email_hash")
     private String emailHash;
+
+    @Column(name = "password_hash")
+    private String passwordHash;
 
     @Column(name = "display_name")
     private String displayName;

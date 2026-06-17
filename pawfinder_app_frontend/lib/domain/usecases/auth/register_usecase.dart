@@ -8,21 +8,29 @@ import '../../repositories/auth_repository.dart';
 
 /// Params for the [RegisterUseCase].
 class RegisterParams extends Equatable {
-  final String email;
-  final String password;
-  final String displayName;
+  final String? phoneNumber;
+  final String? email;
+  final String? password;
+  final String? displayName;
 
-  const RegisterParams({
+  /// Phone-based registration.
+  const RegisterParams.phone({required this.phoneNumber})
+      : email = null,
+        password = null,
+        displayName = null;
+
+  /// Email-based registration.
+  const RegisterParams.email({
     required this.email,
     required this.password,
-    required this.displayName,
-  });
+    this.displayName,
+  }) : phoneNumber = null;
 
   @override
-  List<Object?> get props => [email, password, displayName];
+  List<Object?> get props => [phoneNumber, email, password, displayName];
 }
 
-/// Registers a new user account.
+/// Registers a new user via phone number or email/password.
 class RegisterUseCase extends UseCase<User, RegisterParams> {
   final AuthRepository _repository;
 
@@ -30,9 +38,12 @@ class RegisterUseCase extends UseCase<User, RegisterParams> {
 
   @override
   Future<Either<Failure, User>> call(RegisterParams params) {
-    return _repository.register(
-      email: params.email,
-      password: params.password,
+    if (params.phoneNumber != null) {
+      return _repository.registerPhone(params.phoneNumber!);
+    }
+    return _repository.registerWithEmail(
+      email: params.email!,
+      password: params.password!,
       displayName: params.displayName,
     );
   }

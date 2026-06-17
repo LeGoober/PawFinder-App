@@ -3,10 +3,17 @@ import 'dart:io' show Platform;
 class ApiConstants {
   ApiConstants._();
 
-  /// Returns the correct base URL depending on platform.
-  /// Android emulator uses 10.0.2.2 to reach host localhost;
-  /// all other platforms (web, iOS, desktop) use localhost directly.
+  /// Returns the correct base URL depending on platform and environment.
+  ///
+  /// - Web in production: uses `API_BASE_URL` env var (set in Docker/Render)
+  /// - Android emulator: uses `10.0.2.2` to reach host localhost
+  /// - All other platforms (web dev, iOS, desktop): uses localhost directly
   static String get baseUrl {
+    // Production override via compile-time environment variable
+    // Set with: --dart-define=API_BASE_URL=https://pawfinder-api-gateway.onrender.com
+    const prodUrl = String.fromEnvironment('API_BASE_URL');
+    if (prodUrl.isNotEmpty) return prodUrl;
+
     try {
       if (Platform.isAndroid) return 'http://10.0.2.2:8080';
     } catch (_) {
@@ -16,6 +23,12 @@ class ApiConstants {
   }
 
   static String get wsUrl {
+    // Production WebSocket URL (derived from API base)
+    const prodUrl = String.fromEnvironment('API_BASE_URL');
+    if (prodUrl.isNotEmpty) {
+      return prodUrl.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://');
+    }
+
     try {
       if (Platform.isAndroid) return 'ws://10.0.2.2:8080/ws';
     } catch (_) {}
@@ -26,6 +39,8 @@ class ApiConstants {
   static const String register = '/api/v1/auth/register';
   static const String verify = '/api/v1/auth/verify';
   static const String login = '/api/v1/auth/login';
+  static const String emailRegister = '/api/v1/auth/email/register';
+  static const String emailLogin = '/api/v1/auth/email/login';
   static const String refresh = '/api/v1/auth/refresh';
   static const String me = '/api/v1/auth/me';
 

@@ -1,10 +1,26 @@
-# PawFinder — Start All Backend Services
-# Usage: Set env vars from .env first, then run this script
-#   $env:POSTGRES_URL="..."; ... ; .\start-all.ps1
-#
-# Or source .env manually before running.
+# PawFinder - Start All Backend Services
+# Loads .env automatically — no manual env var setup needed.
 
 $base = Split-Path -Parent $MyInvocation.MyCommand.Path
+
+# Load .env file
+$envFile = Join-Path $base ".env"
+if (Test-Path $envFile) {
+    Get-Content $envFile | ForEach-Object {
+        $line = $_.Trim()
+        if ($line -and $line -notmatch '^#') {
+            $parts = $line -split '=', 2
+            if ($parts.Count -eq 2) {
+                $key = $parts[0].Trim()
+                $value = $parts[1].Trim()
+                [System.Environment]::SetEnvironmentVariable($key, $value, 'Process')
+            }
+        }
+    }
+    Write-Host "Loaded .env configuration" -ForegroundColor Gray
+} else {
+    Write-Host "WARNING: .env file not found at $envFile" -ForegroundColor Yellow
+}
 
 New-Item -ItemType Directory -Path (Join-Path $base "logs") -Force | Out-Null
 
@@ -25,13 +41,14 @@ foreach ($svc in $services) {
     $jarPath = Join-Path $base $svc.Jar
     
     if (-not (Test-Path $jarPath)) {
-        Write-Host "MISSING JAR: $($svc.Name) — run 'mvn clean package -DskipTests' first" -ForegroundColor Red
+        Write-Host "MISSING JAR: $($svc.Name) -- run 'mvn clean package -DskipTests' first" -ForegroundColor Red
         continue
     }
     
     Write-Host "Launching $($svc.Name)..." -ForegroundColor Cyan
-    Start-Process java -ArgumentList "-jar", "`"$jarPath`"" -PassThru -NoNewWindow | Out-Null
+    $args = @("-jar", $jarPath)
+    Start-Process java -ArgumentList $args -PassThru -NoNewWindow | Out-Null
 }
 
-Write-Host "All services launched. Check logs in $base\logs\" -ForegroundColor Green
-Write-Host "Run 'netstat -ano | Select-String \"808\"' to verify ports." -ForegroundColor Gray
+Write-Host "All services launched. Check logs in logs\" -ForegroundColor Green
+Write-Host "Run 'netstat -ano | Select-String 808' to verify ports." -ForegroundColor Gray

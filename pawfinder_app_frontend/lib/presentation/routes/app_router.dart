@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../di/injection.dart';
+import '../blocs/auth/auth_cubit.dart';
 import '../widgets/app_bottom_nav.dart';
 import '../pages/splash_page.dart';
 import '../pages/onboarding_page.dart';
+import '../pages/login_page.dart';
 import '../pages/home_page.dart';
 import '../pages/alerts_page.dart';
 import '../pages/report_sighting_page.dart';
@@ -23,7 +26,9 @@ final GlobalKey<NavigatorState> _shellNavigatorKey =
 final GoRouter appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
+  redirect: _authGuard,
   routes: [
+    // ── Public routes (no auth required) ─────────────────────
     GoRoute(
       path: '/',
       builder: (context, state) => const SplashPage(),
@@ -32,6 +37,12 @@ final GoRouter appRouter = GoRouter(
       path: '/onboarding',
       builder: (context, state) => const OnboardingPage(),
     ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginPage(),
+    ),
+
+    // ── Authenticated shell (bottom nav) ─────────────────────
     StatefulShellRoute.indexedStack(
       builder: (context, state, navigationShell) {
         return _AppShell(navigationShell: navigationShell);
@@ -79,6 +90,8 @@ final GoRouter appRouter = GoRouter(
         ),
       ],
     ),
+
+    // ── Full-screen authenticated routes ─────────────────────
     GoRoute(
       path: '/create-alert',
       parentNavigatorKey: _rootNavigatorKey,
@@ -113,6 +126,23 @@ final GoRouter appRouter = GoRouter(
   ],
 );
 
+/// Auth guard — redirect unauthenticated users away from protected routes.
+String? _authGuard(BuildContext context, GoRouterState state) {
+  final location = state.uri.toString();
+
+  // Public paths — no auth required
+  const publicPaths = ['/', '/onboarding', '/login'];
+  if (publicPaths.contains(location)) return null;
+
+  // Check if user is authenticated
+  final authCubit = getIt<AuthCubit>();
+  if (!authCubit.isAuthenticated) {
+    return '/onboarding';
+  }
+
+  return null;
+}
+
 class _AppShell extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -134,4 +164,3 @@ class _AppShell extends StatelessWidget {
     );
   }
 }
-

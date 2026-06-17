@@ -5,10 +5,14 @@ class UserModel extends Equatable {
   final String id;
   final String? authProvider;
   final String? displayName;
+  final String? email;
+  final String? phoneHash;
   final bool verified;
   final int rescuerBadgeLevel;
   final DateTime createdAt;
   final DateTime? lastActive;
+
+  // Transient — not persisted in the entity, used during auth response parsing
   final String? accessToken;
   final String? refreshToken;
 
@@ -16,6 +20,8 @@ class UserModel extends Equatable {
     required this.id,
     this.authProvider,
     this.displayName,
+    this.email,
+    this.phoneHash,
     this.verified = false,
     this.rescuerBadgeLevel = 0,
     required this.createdAt,
@@ -24,12 +30,12 @@ class UserModel extends Equatable {
     this.refreshToken,
   });
 
-  /// Creates a [UserModel] from a JSON map.
-  factory UserModel.fromJson(Map<String, dynamic> json) =>
-      UserModel(
+  factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
         id: json['id'] as String,
         authProvider: json['authProvider'] as String?,
         displayName: json['displayName'] as String?,
+        email: json['email'] as String?,
+        phoneHash: json['phoneHash'] as String?,
         verified: json['verified'] as bool? ?? false,
         rescuerBadgeLevel: json['rescuerBadgeLevel'] as int? ?? 0,
         createdAt: DateTime.parse(json['createdAt'] as String),
@@ -40,11 +46,12 @@ class UserModel extends Equatable {
         refreshToken: json['refreshToken'] as String?,
       );
 
-  /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
         'id': id,
         'authProvider': authProvider,
         'displayName': displayName,
+        'email': email,
+        'phoneHash': phoneHash,
         'verified': verified,
         'rescuerBadgeLevel': rescuerBadgeLevel,
         'createdAt': createdAt.toIso8601String(),
@@ -53,11 +60,12 @@ class UserModel extends Equatable {
         'refreshToken': refreshToken,
       };
 
-  /// Maps this data model to a domain [User] entity.
   User toEntity() => User(
         id: id,
         authProvider: authProvider,
         displayName: displayName,
+        email: email,
+        phoneHash: phoneHash,
         verified: verified,
         rescuerBadgeLevel: rescuerBadgeLevel,
         createdAt: createdAt,
@@ -69,6 +77,8 @@ class UserModel extends Equatable {
         id,
         authProvider,
         displayName,
+        email,
+        phoneHash,
         verified,
         rescuerBadgeLevel,
         createdAt,

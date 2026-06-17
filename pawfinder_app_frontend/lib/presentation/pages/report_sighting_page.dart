@@ -1,11 +1,15 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../di/injection.dart';
+import '../../services/location_service.dart';
 import '../blocs/sighting/sighting_cubit.dart';
 import '../widgets/app_button.dart';
 import '../widgets/app_text_field.dart';
@@ -25,12 +29,20 @@ class _ReportSightingPageState extends State<ReportSightingPage> {
   late final SightingCubit _cubit;
   final _formKey = GlobalKey<FormState>();
   final _notesController = TextEditingController();
+  final _imagePicker = ImagePicker();
+
   bool _submitted = false;
+  bool _locating = false;
+  double? _lat;
+  double? _lng;
+  String? _locationLabel;
+  String? _photoPath;
 
   @override
   void initState() {
     super.initState();
     _cubit = SightingCubit(sightingRepository: getIt());
+    _captureLocation();
   }
 
   @override
@@ -40,15 +52,48 @@ class _ReportSightingPageState extends State<ReportSightingPage> {
     super.dispose();
   }
 
+  Future<void> _captureLocation() async {
+    setState(() => _locating = true);
+    try {
+      final locationService = getIt<LocationService>();
+      final pos = await locationService.getCurrentPosition();
+      setState(() {
+        _lat = pos.latitude;
+        _lng = pos.longitude;
+        _locationLabel =
+            '${pos.latitude.toStringAsFixed(5)}, ${pos.longitude.toStringAsFixed(5)}';
+        _locating = false;
+      });
+    } catch (_) {
+      setState(() {
+        _locationLabel = '📍 Could not get location — using approximate';
+        _lat = -26.2041;
+        _lng = 28.0473;
+        _locating = false;
+      });
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final xfile =
+          await _imagePicker.pickImage(source: ImageSource.gallery, imageQuality: 80);
+      if (xfile != null) {
+        setState(() => _photoPath = xfile.path);
+      }
+    } catch (_) {
+      // Permission denied or cancelled
+    }
+  }
+
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    // Placeholder coordinates — in production use LocationService
     _cubit.reportSighting(
       alertId: widget.alertId ?? '',
       finderId: widget.finderId ?? '',
-      lat: -26.2041,
-      lng: 28.0473,
+      lat: _lat ?? -26.2041,
+      lng: _lng ?? 28.0473,
       notes: _notesController.text.isNotEmpty ? _notesController.text : null,
     );
     setState(() => _submitted = true);
@@ -123,61 +168,119 @@ class _ReportSightingPageState extends State<ReportSightingPage> {
                     Text('Location', style: AppTypography.h3),
                     AppSpacing.sm,
                     Container(
-                      height: 160,
+                      padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppColors.ink100),
                       ),
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.location_on,
-                              size: 40,
-                              color: AppColors.danger.withValues(alpha: 0.7),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              '📍 Current location will be attached',
-                              style: AppTypography.body.copyWith(
-                                color: AppColors.ink500,
+                      child: _locating
+                          ? const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  CircularProgressIndicator(
+                                      color: AppColors.primary),
+                                  SizedBox(height: 12),
+                                  Text('Getting your location...'),
+                                ],
                               ),
+                            )
+                          : Row(
+                              children: [
+                                Container(
+                                  width: 44,
+                                  height: 44,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary
+                                        .withValues(alpha: 0.12),
+                                    borderRadius:
+                                        BorderRadius.circular(12),
+                                  ),
+                                  child: const Icon(
+                                    Icons.location_on,
+                                    color: AppColors.danger,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Current Location',
+                                        style: AppTypography.label
+                                            .copyWith(
+                                          color: AppColors.ink500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _locationLabel ??
+                                            'Locating...',
+                                        style: AppTypography.body
+                                            .copyWith(
+                                          fontWeight:
+                                              FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                TextButton.icon(
+                                  onPressed: _captureLocation,
+                                  icon: const Icon(Icons.refresh,
+                                      size: 16),
+                                  label: const Text('Retry'),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
                     ),
                     AppSpacing.lg,
                     Text('Photo (Optional)', style: AppTypography.h3),
                     AppSpacing.sm,
                     InkWell(
-                      onTap: () {},
+                      onTap: _pickImage,
                       borderRadius: BorderRadius.circular(16),
                       child: Container(
-                        height: 120,
+                        height: _photoPath != null ? 200 : 120,
                         width: double.infinity,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: AppColors.border,
-                            style: BorderStyle.solid,
+                            color: AppColors.ink100,
                           ),
                           borderRadius: BorderRadius.circular(16),
                           color: AppColors.surface,
                         ),
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.camera_alt_outlined,
-                                  size: 32, color: AppColors.ink500),
-                              const SizedBox(height: 4),
-                              const Text('Tap to add photo',
-                                  style: TextStyle(color: AppColors.ink500)),
-                            ],
-                          ),
-                        ),
+                        clipBehavior: Clip.antiAlias,
+                        child: _photoPath != null
+                            ? Image.file(
+                                File(_photoPath!),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                              )
+                            : Center(
+                                child: Column(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(
+                                      Icons.camera_alt_outlined,
+                                      size: 32,
+                                      color: AppColors.ink500,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'Tap to add photo',
+                                      style: TextStyle(
+                                        color: AppColors.ink500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       ),
                     ),
                     AppSpacing.lg,

@@ -1,0 +1,104 @@
+name: PawFinder CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  FLUTTER_VERSION: "3.24.0"
+  JAVA_VERSION: "21"
+
+jobs:
+  # ── Backend Build & Test ──────────────────────────────────
+  backend:
+    name: Backend — Build & Test
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:15-3.4
+        env:
+          POSTGRES_DB: pawfinder_test
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK ${{ env.JAVA_VERSION }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ env.JAVA_VERSION }}
+          distribution: temurin
+          cache: maven
+
+      - name: Build & Test
+        run: |
+          cd pawfinder-app-backend
+          mvn verify -DskipTests=false -q
+        env:
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/pawfinder_test
+          SPRING_DATASOURCE_USERNAME: test
+          SPRING_DATASOURCE_PASSWORD: test
+          SPRING_REDIS_HOST: localhost
+          SPRING_REDIS_PORT: 6379
+          JWT_SECRET: test-secret-key-for-ci-only-not-production
+
+  # ── Frontend Analyze & Build ──────────────────────────────
+  frontend:
+    name: Frontend — Analyze & Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+
+      - name: Install dependencies
+        run: cd pawfinder_app_frontend && flutter pub get
+
+      - name: Static analysis
+        run: cd pawfinder_app_frontend && flutter analyze --no-fatal-infos
+
+      - name: Build web
+        run: cd pawfinder_app_frontend && flutter build web --release
+
+      - name: Upload web build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pawfinder-web-build
+          path: pawfinder_app_frontend/build/web
+
+  # ── Deploy to Render (main only) ──────────────────────────
+  deploy:
+    name: Deploy to Render
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deploy hook
+        run: |
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          else
+            echo "RENDER_DEPLOY_HOOK_URL not set — skipping deploy trigger"
+          fi

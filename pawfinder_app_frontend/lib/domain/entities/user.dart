@@ -5,6 +5,8 @@ class User extends Equatable {
   final String id;
   final String? authProvider;
   final String? displayName;
+  final String? email;
+  final String? phoneHash;
   final bool verified;
   final int rescuerBadgeLevel;
   final DateTime createdAt;
@@ -14,6 +16,8 @@ class User extends Equatable {
     required this.id,
     this.authProvider,
     this.displayName,
+    this.email,
+    this.phoneHash,
     this.verified = false,
     this.rescuerBadgeLevel = 0,
     required this.createdAt,
@@ -24,9 +28,13 @@ class User extends Equatable {
   User copyWith({
     String? id,
     String? authProvider,
-    bool? authProviderNull, // set to true to nullify
+    bool? authProviderNull,
     String? displayName,
     bool? displayNameNull,
+    String? email,
+    bool? emailNull,
+    String? phoneHash,
+    bool? phoneHashNull,
     bool? verified,
     int? rescuerBadgeLevel,
     DateTime? createdAt,
@@ -37,6 +45,8 @@ class User extends Equatable {
       id: id ?? this.id,
       authProvider: authProviderNull == true ? null : (authProvider ?? this.authProvider),
       displayName: displayNameNull == true ? null : (displayName ?? this.displayName),
+      email: emailNull == true ? null : (email ?? this.email),
+      phoneHash: phoneHashNull == true ? null : (phoneHash ?? this.phoneHash),
       verified: verified ?? this.verified,
       rescuerBadgeLevel: rescuerBadgeLevel ?? this.rescuerBadgeLevel,
       createdAt: createdAt ?? this.createdAt,
@@ -49,6 +59,8 @@ class User extends Equatable {
         id,
         authProvider,
         displayName,
+        email,
+        phoneHash,
         verified,
         rescuerBadgeLevel,
         createdAt,
