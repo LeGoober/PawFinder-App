@@ -8,6 +8,7 @@ import '../../core/theme/app_spacing.dart';
 import '../../core/theme/app_typography.dart';
 import '../../di/injection.dart';
 import '../blocs/alert/alert_cubit.dart';
+import '../blocs/auth/auth_cubit.dart';
 import '../widgets/alert_card.dart';
 import '../widgets/alert_map_widget.dart';
 import '../widgets/info_banner.dart';
@@ -50,6 +51,7 @@ class _HomePageState extends State<HomePage> {
         child: Scaffold(
           backgroundColor: Colors.transparent,
           extendBodyBehindAppBar: true,
+          drawer: _buildDrawer(context),
           appBar: _buildGlassAppBar(context),
           body: BlocBuilder<AlertCubit, AlertState>(
             bloc: _alertCubit,
@@ -174,7 +176,7 @@ class _HomePageState extends State<HomePage> {
           child:
               const Icon(Icons.menu_rounded, color: AppColors.ink900, size: 20),
         ),
-        onPressed: () {},
+        onPressed: () => Scaffold.of(context).openDrawer(),
       ),
       actions: [
         IconButton(
@@ -191,7 +193,7 @@ class _HomePageState extends State<HomePage> {
               size: 20,
             ),
           ),
-          onPressed: () {},
+          onPressed: () => _showNotifications(context),
         ),
       ],
     );
@@ -333,7 +335,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const Spacer(),
           GestureDetector(
-            onTap: () {},
+            onTap: () => context.push('/alerts'),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
@@ -351,6 +353,126 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
       ),
+    );
+  }
+
+  // ── Drawer ─────────────────────────────────────────────────
+
+  Widget _buildDrawer(BuildContext context) {
+    final authCubit = context.read<AuthCubit>();
+    final user = authCubit.currentUser;
+
+    return Drawer(
+      backgroundColor: AppColors.background,
+      child: SafeArea(
+        child: Column(
+          children: [
+            // User header
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: const Icon(
+                      Icons.pets_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    user?.displayName ?? 'Pet Lover',
+                    style: AppTypography.h3.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Let\'s bring them home',
+                    style: AppTypography.caption.copyWith(
+                      color: Colors.white.withValues(alpha: 0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // Nav items
+            const SizedBox(height: 8),
+            _DrawerItem(
+              icon: Icons.dashboard_rounded,
+              label: 'Dashboard',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/dashboard');
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.leaderboard_rounded,
+              label: 'Leaderboard',
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/leaderboard');
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.notifications_outlined,
+              label: 'Notifications',
+              onTap: () {
+                Navigator.pop(context);
+                _showNotifications(context);
+              },
+            ),
+            _DrawerItem(
+              icon: Icons.pets_outlined,
+              label: 'My Pets',
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/profile');
+              },
+            ),
+            const Spacer(),
+            const Divider(color: AppColors.ink100, height: 1),
+            _DrawerItem(
+              icon: Icons.logout_rounded,
+              label: 'Sign Out',
+              iconColor: AppColors.danger,
+              onTap: () {
+                Navigator.pop(context);
+                authCubit.logout();
+                context.go('/');
+              },
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Notifications Bottom Sheet ─────────────────────────────
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _NotificationSheet(alertCubit: _alertCubit),
     );
   }
 
@@ -390,6 +512,204 @@ class _HomePageState extends State<HomePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Drawer item
+// ═══════════════════════════════════════════════════════════════
+
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? iconColor;
+
+  const _DrawerItem({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.iconColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              size: 22,
+              color: iconColor ?? AppColors.ink700,
+            ),
+            const SizedBox(width: 14),
+            Text(
+              label,
+              style: AppTypography.body.copyWith(
+                fontWeight: FontWeight.w600,
+                color: iconColor ?? AppColors.ink900,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Notifications bottom sheet
+// ═══════════════════════════════════════════════════════════════
+
+class _NotificationSheet extends StatelessWidget {
+  final AlertCubit alertCubit;
+
+  const _NotificationSheet({required this.alertCubit});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.6,
+      ),
+      decoration: const BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Handle bar
+          Container(
+            margin: const EdgeInsets.only(top: 12, bottom: 8),
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: AppColors.ink300,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          // Title
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Row(
+              children: [
+                Text(
+                  'Recent Alerts',
+                  style: AppTypography.h3.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const Spacer(),
+                TextButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                    context.push('/alerts');
+                  },
+                  child: Text(
+                    'View all',
+                    style: AppTypography.button.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(color: AppColors.ink100, height: 1),
+          // Alert list
+          Flexible(
+            child: BlocBuilder<AlertCubit, AlertState>(
+              bloc: alertCubit,
+              builder: (context, state) {
+                if (state is AlertsLoaded) {
+                  if (state.alerts.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle_outline,
+                              size: 48, color: AppColors.success),
+                          SizedBox(height: 12),
+                          Text(
+                            'No active alerts nearby',
+                            style: TextStyle(color: AppColors.ink500),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return ListView.separated(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    shrinkWrap: true,
+                    itemCount: state.alerts.length.clamp(0, 5),
+                    separatorBuilder: (_, __) =>
+                        const Divider(color: AppColors.ink100, height: 1, indent: 16, endIndent: 16),
+                    itemBuilder: (context, index) {
+                      final alert = state.alerts[index];
+                      return ListTile(
+                        leading: CircleAvatar(
+                          radius: 20,
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          child: Text(
+                            alert.species == 'dog' ? '🐕' : alert.species == 'cat' ? '🐈' : '🐾',
+                            style: const TextStyle(fontSize: 18),
+                          ),
+                        ),
+                        title: Text(
+                          '${alert.petName} — ${alert.species}',
+                          style: AppTypography.body.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        subtitle: Text(
+                          alert.lastSeenAddress ?? 'Location unknown',
+                          style: AppTypography.caption.copyWith(
+                            color: AppColors.ink500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        trailing: alert.rewardAmount > 0
+                            ? Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.secondary.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  '${alert.rewardCurrency} ${alert.rewardAmount.toStringAsFixed(0)}',
+                                  style: AppTypography.caption.copyWith(
+                                    color: AppColors.secondary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              )
+                            : null,
+                        onTap: () {
+                          Navigator.pop(context);
+                          context.push('/alert/${alert.id}');
+                        },
+                      );
+                    },
+                  );
+                }
+                return const Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

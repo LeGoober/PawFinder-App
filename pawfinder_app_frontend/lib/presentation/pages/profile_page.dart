@@ -272,7 +272,7 @@ class _UserInfoCard extends StatelessWidget {
           ),
           IconButton(
             icon: const Icon(Icons.edit_outlined, color: AppColors.ink500),
-            onPressed: () {},
+            onPressed: () => _showComingSoon(context, 'Edit Profile'),
           ),
         ],
       ),
@@ -293,6 +293,17 @@ class _UserInfoCard extends StatelessWidget {
   }
 }
 
+void _showComingSoon(BuildContext context, String feature) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('$feature — coming soon'),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      duration: const Duration(seconds: 2),
+    ),
+  );
+}
+
 class _SettingsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -301,31 +312,31 @@ class _SettingsList extends StatelessWidget {
         icon: Icons.pets_outlined,
         title: 'My Pets',
         subtitle: 'Add and manage your registered pets',
-        onTap: () {},
+        onTap: () => context.go('/home'),
       ),
       _SettingsItemData(
         icon: Icons.person_outline,
         title: 'Account Settings',
         subtitle: 'Update profile, email, password',
-        onTap: () {},
+        onTap: () => _showComingSoon(context, 'Account Settings'),
       ),
       _SettingsItemData(
         icon: Icons.notifications_outlined,
         title: 'Notification Preferences',
         subtitle: 'Manage alert notifications',
-        onTap: () {},
+        onTap: () => _showComingSoon(context, 'Notification Preferences'),
       ),
       _SettingsItemData(
         icon: Icons.lock_outline,
         title: 'Privacy Controls',
         subtitle: 'Control your visibility and data',
-        onTap: () {},
+        onTap: () => _showComingSoon(context, 'Privacy Controls'),
       ),
       _SettingsItemData(
         icon: Icons.help_outline,
         title: 'Help & Support',
         subtitle: 'FAQs, contact, report issues',
-        onTap: () {},
+        onTap: () => _showComingSoon(context, 'Help & Support'),
       ),
     ];
 

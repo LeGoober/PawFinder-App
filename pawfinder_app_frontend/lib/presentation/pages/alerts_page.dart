@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../di/injection.dart';
+import '../../domain/entities/alert.dart';
 import '../blocs/alert/alert_cubit.dart';
 import '../widgets/alert_card.dart';
 import '../widgets/empty_state.dart';
@@ -18,6 +20,7 @@ class AlertsPage extends StatefulWidget {
 
 class _AlertsPageState extends State<AlertsPage> {
   late final AlertCubit _alertCubit;
+  String _activeFilter = 'all';
 
   @override
   void initState() {
@@ -68,6 +71,20 @@ class _AlertsPageState extends State<AlertsPage> {
                 );
               }
 
+              final filteredAlerts = _applyFilter(state.alerts);
+
+              if (filteredAlerts.isEmpty) {
+                return Center(
+                  child: EmptyState(
+                    icon: Icons.filter_list_off,
+                    title: 'No matching alerts',
+                    subtitle: 'Try a different filter.',
+                    actionText: 'Clear filter',
+                    onAction: () => setState(() => _activeFilter = 'all'),
+                  ),
+                );
+              }
+
               return RefreshIndicator(
                 onRefresh: () => _alertCubit.loadAlerts(),
                 child: ListView.builder(
@@ -77,16 +94,14 @@ class _AlertsPageState extends State<AlertsPage> {
                     top: 8,
                     bottom: 100,
                   ),
-                  itemCount: state.alerts.length,
+                  itemCount: filteredAlerts.length,
                   itemBuilder: (context, index) {
-                    final alert = state.alerts[index];
+                    final alert = filteredAlerts[index];
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: AlertCard.fromAlert(
                         alert: alert,
-                        onTap: () {
-                          // Navigate to alert detail
-                        },
+                        onTap: () => context.push('/alert/${alert.id}'),
                       ),
                     );
                   },
@@ -114,20 +129,41 @@ class _AlertsPageState extends State<AlertsPage> {
     );
   }
 
+  List<Alert> _applyFilter(List<Alert> alerts) {
+    switch (_activeFilter) {
+      case 'dog':
+        return alerts.where((a) => a.species.toLowerCase().contains('dog') || a.species.toLowerCase().contains('canine')).toList();
+      case 'cat':
+        return alerts.where((a) => a.species.toLowerCase().contains('cat') || a.species.toLowerCase().contains('feline')).toList();
+      case 'with_reward':
+        return alerts.where((a) => a.rewardAmount > 0).toList();
+      default:
+        return alerts;
+    }
+  }
+
   Widget _buildFilterButton() {
+    final isActive = _activeFilter != 'all';
     return PopupMenuButton<String>(
       icon: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.08),
+          color: isActive
+              ? AppColors.primary.withValues(alpha: 0.15)
+              : AppColors.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
+          border: isActive
+              ? Border.all(color: AppColors.primary.withValues(alpha: 0.3))
+              : null,
         ),
-        child: const Icon(Icons.filter_list, color: AppColors.primary, size: 20),
+        child: Icon(
+          isActive ? Icons.filter_alt : Icons.filter_list,
+          color: AppColors.primary,
+          size: 20,
+        ),
       ),
-      onSelected: (value) {
-        // Implement filter logic
-      },
+      onSelected: (value) => setState(() => _activeFilter = value),
       itemBuilder: (context) => [
         const PopupMenuItem(
           value: 'all',

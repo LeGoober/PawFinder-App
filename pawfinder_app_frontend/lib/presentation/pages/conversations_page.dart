@@ -6,6 +6,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_typography.dart';
 import '../../di/injection.dart';
 import '../../domain/entities/conversation.dart';
+import '../blocs/auth/auth_cubit.dart';
 import '../blocs/messaging/messaging_cubit.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/skeleton_loader.dart';
@@ -24,8 +25,10 @@ class _ConversationsPageState extends State<ConversationsPage> {
   void initState() {
     super.initState();
     _cubit = MessagingCubit(conversationRepository: getIt());
-    // In production, get currentUserId from AuthCubit
-    _cubit.setCurrentUserId('current-user-id');
+    // Pull real user ID from AuthCubit
+    final authCubit = context.read<AuthCubit>();
+    final userId = authCubit.currentUser?.id ?? 'anonymous';
+    _cubit.setCurrentUserId(userId);
     _cubit.loadConversations();
   }
 
