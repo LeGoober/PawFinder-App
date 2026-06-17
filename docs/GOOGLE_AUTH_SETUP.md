@@ -50,7 +50,16 @@ account, returning JWT tokens.
    | | `https://your-app.onrender.com` *(production)* |
 
 5. Click **Create**
-6. Copy the **Client ID** (looks like `123456789-xxxxx.apps.googleusercontent.com`)
+
+## Step 3.5: Enable Required APIs
+
+The Google Sign-In plugin requires the **People API** to fetch user
+profile info (name, photo, email). Without this, sign-in fails with
+a 403 PERMISSION_DENIED error.
+
+1. Go to https://console.developers.google.com/apis/api/people.googleapis.com/overview?project=YOUR_PROJECT_ID
+2. Click **Enable**
+3. Wait 2–3 minutes for propagation
 
 ## Step 4: Add Client ID to PawFinder
 
