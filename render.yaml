@@ -361,12 +361,18 @@ services:
 # Databases
 # ═══════════════════════════════════════════════════════════════
 
-databases:
-  - name: pawfinder-db
-    databaseName: pawfinder
+  # ── Managed Redis ──────────────────────────────────────────
+  - type: redis
+    name: pawfinder-redis
     plan: starter
     ipAllowList: []
 
-  - name: pawfinder-redis
+# ═══════════════════════════════════════════════════════════════
+# Databases
+# ═══════════════════════════════════════════════════════════════
+
+databases:
+  - name: pawfinder-db
+    databaseName: pawfinder
     plan: starter
     ipAllowList: []
