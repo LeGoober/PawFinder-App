@@ -357,15 +357,16 @@ services:
       - key: JWT_SECRET
         sync: false
 
-  # ── Managed PostgreSQL + PostGIS ───────────────────────────
-  - type: database
-    name: pawfinder-db
+# ═══════════════════════════════════════════════════════════════
+# Databases
+# ═══════════════════════════════════════════════════════════════
+
+databases:
+  - name: pawfinder-db
     databaseName: pawfinder
     plan: starter
     ipAllowList: []
 
-  # ── Managed Redis ──────────────────────────────────────────
-  - type: redis
-    name: pawfinder-redis
+  - name: pawfinder-redis
     plan: starter
     ipAllowList: []
