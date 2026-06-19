@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../core/errors/failures.dart';
-import '../../entities/pet.dart';
+import '../../core/errors/failures.dart';
+import '../entities/pet.dart';
 
 /// Repository contract for pet profile operations.
 abstract class PetRepository {

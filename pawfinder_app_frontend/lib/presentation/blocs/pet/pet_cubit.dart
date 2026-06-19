@@ -97,7 +97,7 @@ class PetCubit extends Cubit<PetState> {
 
       result.fold(
         (failure) => emit(PetError(message: failure.message)),
-        (_) => emit(const PetCreated(
+        (_) => emit(PetCreated(
           pet: Pet(
             id: '',
             ownerId: '',
