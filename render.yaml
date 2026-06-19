@@ -25,15 +25,12 @@ services:
   # ── Frontend ───────────────────────────────────────────────
   - type: web
     name: pawfinder-frontend
-    runtime: static
-    repo: https://github.com/roris/PawsFinder
+    runtime: docker
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder_app_frontend
-    buildCommand: flutter build web --release
-    staticPublishPath: build/web
-    routes:
-      - type: rewrite
-        source: /*
-        destination: /index.html
+    dockerfilePath: Dockerfile
+    plan: starter
+    healthCheckPath: /
     envVars:
       - key: FLUTTER_VERSION
         value: "3.24.0"
@@ -42,7 +39,7 @@ services:
   - type: web
     name: pawfinder-api-gateway
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -117,7 +114,7 @@ services:
   - type: web
     name: pawfinder-auth-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -154,7 +151,7 @@ services:
   - type: web
     name: pawfinder-alert-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -190,7 +187,7 @@ services:
   - type: web
     name: pawfinder-messaging-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -221,7 +218,7 @@ services:
   - type: web
     name: pawfinder-reward-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -256,7 +253,7 @@ services:
   - type: web
     name: pawfinder-media-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -283,7 +280,7 @@ services:
   - type: web
     name: pawfinder-analytics-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -314,7 +311,7 @@ services:
   - type: web
     name: pawfinder-matching-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
@@ -339,7 +336,7 @@ services:
   - type: web
     name: pawfinder-notification-service
     runtime: docker
-    repo: https://github.com/roris/PawsFinder
+    repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
     dockerfilePath: Dockerfile
     buildFilter:
