@@ -33,7 +33,7 @@ services:
     healthCheckPath: /
     envVars:
       - key: FLUTTER_VERSION
-        value: "3.24.0"
+        value: "3.41.6"
 
   # ── API Gateway ────────────────────────────────────────────
   - type: web
