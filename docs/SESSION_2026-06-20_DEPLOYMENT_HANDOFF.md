@@ -6,10 +6,16 @@
 - **Status:** Deployment failing on Render — frontend Docker build error
 - **Root cause:** `cirrusci/flutter:3.24.0` image removed from Docker Hub (registry deprecated)
 
-### What We Just Fixed
+### Fix 1 — Registry Migration (commit fe55c67)
 - **File:** `pawfinder_app_frontend/Dockerfile` line 2
 - **Change:** `cirrusci/flutter:3.24.0` → `ghcr.io/cirruslabs/flutter:3.24.0`
 - **Verified:** `ghcr.io/cirruslabs/flutter:3.24.0` exists (multi-arch: amd64 + arm64)
+
+### Fix 2 — Flutter Version Bump (commit 29b3ce4)
+- **Problem:** `Color.withValues()` doesn't exist in Flutter 3.24.0 — added in 3.27+
+- **Root cause:** Local dev uses Flutter 3.41.6 (Dart 3.11.4), Docker pinned 3.24.0
+- **Change:** `ghcr.io/cirruslabs/flutter:3.24.0` → `ghcr.io/cirruslabs/flutter:3.41.6`
+- **Also updated:** `FLUTTER_VERSION` env var in `render.yaml`
 
 ### What Rori Needs To Do
 1. **Commit & push the Dockerfile fix:**
