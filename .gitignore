@@ -1,0 +1,3 @@
+# Render env var cheat sheets — contain secrets, DO NOT COMMIT
+render-gateway.env
+render-auth.env
