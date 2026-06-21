@@ -1,0 +1,71 @@
+# ────────────────────────────────────────────────────────────
+# Gateway — Production Overrides (activated by SPRING_PROFILES_ACTIVE=prod)
+# ────────────────────────────────────────────────────────────
+
+spring:
+  cloud:
+    gateway:
+      routes:
+        # Auth Service
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URL:http://localhost:8081}
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+
+        # Alert Service (core — alerts, sightings, pets)
+        - id: alert-service
+          uri: ${ALERT_SERVICE_URL:http://localhost:8082}
+          predicates:
+            - Path=/api/v1/alerts/**,/api/v1/sightings/**,/api/v1/pets/**
+
+        # Messaging Service
+        - id: messaging-service
+          uri: ${MESSAGING_SERVICE_URL:http://localhost:8083}
+          predicates:
+            - Path=/api/v1/conversations/**,/api/v1/messages/**
+
+        # Reward Service
+        - id: reward-service
+          uri: ${REWARD_SERVICE_URL:http://localhost:8084}
+          predicates:
+            - Path=/api/v1/rewards/**
+
+        # Media Service
+        - id: media-service
+          uri: ${MEDIA_SERVICE_URL:http://localhost:8085}
+          predicates:
+            - Path=/api/v1/media/**
+
+        # Analytics Service
+        - id: analytics-service
+          uri: ${ANALYTICS_SERVICE_URL:http://localhost:8086}
+          predicates:
+            - Path=/api/v1/dashboard/**,/api/v1/leaderboard/**,/api/v1/badges/**
+
+        # Matching Service
+        - id: matching-service
+          uri: ${MATCHING_SERVICE_URL:http://localhost:8087}
+          predicates:
+            - Path=/api/v1/matching/**
+
+        # Notification Service
+        - id: notification-service
+          uri: ${NOTIFICATION_SERVICE_URL:http://localhost:8088}
+          predicates:
+            - Path=/api/v1/notifications/**
+
+  # Redis — Upstash connection (set REDIS_URL on Render)
+  data:
+    redis:
+      url: ${REDIS_URL:redis://localhost:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2

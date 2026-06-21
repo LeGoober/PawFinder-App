@@ -41,11 +41,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.api-gateway
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-api-gateway -t gateway .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -92,20 +91,9 @@ services:
           type: web
           property: hostport
       - key: REDIS_URL
-        fromService:
-          name: pawfinder-redis
-          type: redis
-          property: connectionString
-      - key: SPRING_REDIS_HOST
-        fromService:
-          name: pawfinder-redis
-          type: redis
-          property: host
-      - key: SPRING_REDIS_PORT
-        fromService:
-          name: pawfinder-redis
-          type: redis
-          property: port
+        sync: false
+      - key: JWT_SECRET
+        sync: false
     disk:
       name: gateway-logs
       mountPath: /app/logs
@@ -116,48 +104,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.auth-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-auth-service -t auth .
-    plan: starter
-    healthCheckPath: /actuator/health
-    envVars:
-      - key: SPRING_PROFILES_ACTIVE
-        value: prod
-      - key: SPRING_DATASOURCE_URL
-        fromDatabase:
-          name: pawfinder-db
-          property: connectionString
-      - key: SPRING_DATASOURCE_USERNAME
-        fromDatabase:
-          name: pawfinder-db
-          property: user
-      - key: SPRING_DATASOURCE_PASSWORD
-        fromDatabase:
-          name: pawfinder-db
-          property: password
-      - key: JWT_SECRET
-        generateValue: true
-      - key: TWILIO_ACCOUNT_SID
-        sync: false
-      - key: TWILIO_AUTH_TOKEN
-        sync: false
-      - key: TWILIO_PHONE_NUMBER
-        sync: false
-
-  # ── Alert Service (core) ───────────────────────────────────
-  - type: web
-    name: pawfinder-alert-service
-    runtime: docker
-    repo: https://github.com/LeGoober/PawFinder-App
-    rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
-    buildFilter:
-      paths:
-        - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-alert-service -t alert .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -176,10 +126,45 @@ services:
           name: pawfinder-db
           property: password
       - key: REDIS_URL
-        fromService:
-          name: pawfinder-redis
-          type: redis
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: TWILIO_PHONE_NUMBER
+        sync: false
+
+  # ── Alert Service (core) ───────────────────────────────────
+  - type: web
+    name: pawfinder-alert-service
+    runtime: docker
+    repo: https://github.com/LeGoober/PawFinder-App
+    rootDir: pawfinder-app-backend
+    dockerfilePath: Dockerfile.alert-service
+    buildFilter:
+      paths:
+        - pawfinder-app-backend/**
+    plan: starter
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: pawfinder-db
           property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: pawfinder-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: pawfinder-db
+          property: password
+      - key: REDIS_URL
+        sync: false
       - key: JWT_SECRET
         sync: false
 
@@ -189,11 +174,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.messaging-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-messaging-service -t messaging .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -220,11 +204,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.reward-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-reward-service -t reward .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -255,11 +238,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.media-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-media-service -t media .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -282,11 +264,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.analytics-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-analytics-service -t analytics .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -313,11 +294,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.matching-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-matching-service -t matching .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
@@ -338,11 +318,10 @@ services:
     runtime: docker
     repo: https://github.com/LeGoober/PawFinder-App
     rootDir: pawfinder-app-backend
-    dockerfilePath: Dockerfile
+    dockerfilePath: Dockerfile.notification-service
     buildFilter:
       paths:
         - pawfinder-app-backend/**
-    dockerCommand: docker build --build-arg SERVICE_NAME=pawfinder-notification-service -t notification .
     plan: starter
     healthCheckPath: /actuator/health
     envVars:
