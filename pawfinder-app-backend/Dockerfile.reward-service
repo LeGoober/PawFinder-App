@@ -13,7 +13,12 @@ COPY pawfinder-reward-service/pom.xml pawfinder-reward-service/
 COPY pawfinder-reward-service/src pawfinder-reward-service/src/
 
 # Build only the target service (skip tests for CI speed)
-RUN mvn package -pl pawfinder-reward-service -am -DskipTests -q
+WORKDIR /app
+RUN mvn install -N -DskipTests -q
+WORKDIR /app/pawfinder-shared
+RUN mvn install -DskipTests -q
+WORKDIR /app/pawfinder-reward-service
+RUN mvn package -DskipTests -q
 
 # ── Stage 2: Runtime ────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine

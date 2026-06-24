@@ -13,7 +13,12 @@ COPY pawfinder-analytics-service/pom.xml pawfinder-analytics-service/
 COPY pawfinder-analytics-service/src pawfinder-analytics-service/src/
 
 # Build only the target service (skip tests for CI speed)
-RUN mvn package -pl pawfinder-analytics-service -am -DskipTests -q
+WORKDIR /app
+RUN mvn install -N -DskipTests -q
+WORKDIR /app/pawfinder-shared
+RUN mvn install -DskipTests -q
+WORKDIR /app/pawfinder-analytics-service
+RUN mvn package -DskipTests -q
 
 # ── Stage 2: Runtime ────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine

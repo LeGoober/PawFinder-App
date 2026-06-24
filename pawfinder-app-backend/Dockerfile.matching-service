@@ -13,7 +13,12 @@ COPY pawfinder-matching-service/pom.xml pawfinder-matching-service/
 COPY pawfinder-matching-service/src pawfinder-matching-service/src/
 
 # Build only the target service (skip tests for CI speed)
-RUN mvn package -pl pawfinder-matching-service -am -DskipTests -q
+WORKDIR /app
+RUN mvn install -N -DskipTests -q
+WORKDIR /app/pawfinder-shared
+RUN mvn install -DskipTests -q
+WORKDIR /app/pawfinder-matching-service
+RUN mvn package -DskipTests -q
 
 # ── Stage 2: Runtime ────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine

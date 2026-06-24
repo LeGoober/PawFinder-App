@@ -13,7 +13,13 @@ COPY pawfinder-auth-service/pom.xml pawfinder-auth-service/
 COPY pawfinder-auth-service/src pawfinder-auth-service/src/
 
 # Build only the target service (skip tests for CI speed)
-RUN mvn package -pl pawfinder-auth-service -am -DskipTests -q
+# Build shared + parent first, then the target module
+WORKDIR /app
+RUN mvn install -N -DskipTests -q
+WORKDIR /app/pawfinder-shared
+RUN mvn install -DskipTests -q
+WORKDIR /app/pawfinder-auth-service
+RUN mvn package -DskipTests -q
 
 # ── Stage 2: Runtime ────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine

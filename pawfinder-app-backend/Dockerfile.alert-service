@@ -13,7 +13,12 @@ COPY pawfinder-alert-service/pom.xml pawfinder-alert-service/
 COPY pawfinder-alert-service/src pawfinder-alert-service/src/
 
 # Build only the target service (skip tests for CI speed)
-RUN mvn package -pl pawfinder-alert-service -am -DskipTests -q
+WORKDIR /app
+RUN mvn install -N -DskipTests -q
+WORKDIR /app/pawfinder-shared
+RUN mvn install -DskipTests -q
+WORKDIR /app/pawfinder-alert-service
+RUN mvn package -DskipTests -q
 
 # ── Stage 2: Runtime ────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine

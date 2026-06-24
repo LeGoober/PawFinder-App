@@ -13,7 +13,12 @@ COPY pawfinder-api-gateway/pom.xml pawfinder-api-gateway/
 COPY pawfinder-api-gateway/src pawfinder-api-gateway/src/
 
 # Build only the target service (skip tests for CI speed)
-RUN mvn package -pl pawfinder-api-gateway -am -DskipTests -q
+WORKDIR /app
+RUN mvn install -N -DskipTests -q
+WORKDIR /app/pawfinder-shared
+RUN mvn install -DskipTests -q
+WORKDIR /app/pawfinder-api-gateway
+RUN mvn package -DskipTests -q
 
 # ── Stage 2: Runtime ────────────────────────────────────────
 FROM eclipse-temurin:21-jre-alpine
