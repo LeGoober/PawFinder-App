@@ -1,0 +1,38 @@
+{
+  "ownerId": "tea-d4m5q4khg0os73bkn6g0",
+  "type": "web_service",
+  "name": "pawfinder-api-gateway",
+  "repo": "https://github.com/LeGoober/PawFinder-App",
+  "branch": "main",
+  "rootDir": "pawfinder-app-backend",
+  "autoDeploy": "yes",
+  "serviceDetails": {
+    "env": "docker",
+    "plan": "free",
+    "region": "oregon",
+    "healthCheckPath": "/actuator/health",
+    "envSpecificDetails": {
+      "dockerfilePath": "Dockerfile.api-gateway",
+      "dockerContext": ".",
+      "dockerCommand": ""
+    }
+  },
+  "envVars": [
+    {"key": "SPRING_PROFILES_ACTIVE", "value": "prod"},
+    {"key": "SPRING_DATASOURCE_URL", "value": "jdbc:postgresql://dpg-d8r47dj7uimc73elmf60-a:5432/pawfinder_6eel"},
+    {"key": "SPRING_DATASOURCE_USERNAME", "value": "pawfinder"},
+    {"key": "SPRING_DATASOURCE_PASSWORD", "value": "avzztSDZq0EDCMIw3dUN1XybQYbXjcaF"},
+    {"key": "REDIS_URL", "value": "redis://default:gQAAAAAAAQ13AAIgcDE1Yzc1OTVjMTg2YmE0NjJkODIyNGFjYzRjODk3NzdhMQ@tough-kangaroo-68983.upstash.io:6379"},
+    {"key": "SPRING_REDIS_HOST", "value": "tough-kangaroo-68983.upstash.io"},
+    {"key": "SPRING_REDIS_PORT", "value": "6379"},
+    {"key": "JWT_SECRET", "value": "81206cdfe61de424656a0ce15dcaf1d78735d1ed0a6ac182b54a8106341c8bdd"},
+    {"key": "AUTH_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "ALERT_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "MESSAGING_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "REWARD_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "MEDIA_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "ANALYTICS_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "MATCHING_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"},
+    {"key": "NOTIFICATION_SERVICE_URL", "value": "https://pawfinder-auth-service.onrender.com"}
+  ]
+}

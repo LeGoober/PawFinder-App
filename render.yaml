@@ -4,21 +4,30 @@
 # Deploy: push to GitHub → Render auto-deploys via this file.
 # Managed services used instead of containerized infra.
 #
-# Services:
-#   1. Frontend    — Flutter Web via Nginx (Static Site)
-#   2. API Gateway — Spring Boot Web Service
-#   3. Auth        — Spring Boot Web Service
-#   4. Alert       — Spring Boot Web Service (core service)
-#   5. Messaging   — Spring Boot Web Service
-#   6. Reward      — Spring Boot Web Service
-#   7. Media       — Spring Boot Web Service
-#   8. Analytics   — Spring Boot Web Service
-#   9. Matching    — Spring Boot Web Service
-#  10. Notification— Spring Boot Web Service
+# Each backend service uses a PER-SERVICE Dockerfile
+# (e.g., Dockerfile.auth-service) because Render Blueprint
+# does not support --build-arg for Docker builds.
+# The generic Dockerfile (with ARG SERVICE_NAME) is for
+# local/manual builds only.
 #
-# Note: For cost efficiency on V0.1, consider consolidating
-#       services 4-10 into fewer deployments using Spring
-#       profiles. See docs/DEPLOYMENT.md for details.
+# For per-service control and better error visibility,
+# use the CLI/API deployment path described in
+# docs/DEPLOYMENT.md (Path D).
+#
+# Services:
+#   1. Frontend    — Flutter Web via Nginx (Web Service)
+#   2. API Gateway — Spring Boot Web Service (WebFlux)
+#   3. Auth        — Spring Boot Web Service
+#   4. Alert       — Spring Boot Web Service (PostGIS)
+#   5. Messaging   — Spring Boot Web Service
+#   6. Reward      — Spring Boot Web Service (Stripe)
+#   7. Media       — Spring Boot Web Service (AWS S3)
+#   8. Analytics   — Spring Boot Web Service
+#   9. Matching    — Spring Boot Web Service (AWS Rekognition)
+#  10. Notification— Spring Boot Web Service (FCM + SendGrid)
+#
+# Note: For cost efficiency on V0.1, deploy only the services
+#       you need. See docs/DEPLOYMENT.md for all paths.
 # ────────────────────────────────────────────────────────────
 
 services:
@@ -336,10 +345,6 @@ services:
       - key: JWT_SECRET
         sync: false
 
-# ═══════════════════════════════════════════════════════════════
-# Databases
-# ═══════════════════════════════════════════════════════════════
-
   # ── Managed Redis ──────────────────────────────────────────
   - type: redis
     name: pawfinder-redis
@@ -347,7 +352,7 @@ services:
     ipAllowList: []
 
 # ═══════════════════════════════════════════════════════════════
-# Databases
+# Managed Databases
 # ═══════════════════════════════════════════════════════════════
 
 databases:

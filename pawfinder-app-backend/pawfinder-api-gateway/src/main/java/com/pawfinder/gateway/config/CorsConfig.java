@@ -19,7 +19,7 @@ public class CorsConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "capacitor://localhost",
-                "https://pawfinder.app"
+                "https://pawfinder-frontend-juem.onrender.com"
         ));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         corsConfig.setAllowedHeaders(List.of("*"));
