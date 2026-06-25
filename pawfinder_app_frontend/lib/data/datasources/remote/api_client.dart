@@ -112,7 +112,8 @@ class ApiClient {
   }
 
   /// Convenience: GET request that returns decoded body or throws [ServerException].
-  Future<dynamic> get(String path, {Map<String, dynamic>? queryParameters}) async {
+  Future<dynamic> get(String path,
+      {Map<String, dynamic>? queryParameters}) async {
     try {
       final response = await dio.get(path, queryParameters: queryParameters);
       return response.data;

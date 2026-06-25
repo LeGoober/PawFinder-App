@@ -1,33 +1,42 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/foundation.dart' show kIsWeb;
+
 class ApiConstants {
   ApiConstants._();
 
   /// Returns the correct base URL depending on platform and environment.
   ///
-  /// - Web in production: uses `API_BASE_URL` env var (set in Docker/Render)
+  /// - Web in production (no dart-define): uses Render gateway URL
+  /// - Web with dart-define: uses `API_BASE_URL` (set at build time)
   /// - Android emulator: uses `10.0.2.2` to reach host localhost
-  /// - All other platforms (web dev, iOS, desktop): uses localhost directly
+  /// - All other platforms: uses localhost directly
   static String get baseUrl {
     // Production override via compile-time environment variable
     // Set with: --dart-define=API_BASE_URL=https://pawfinder-api-gateway.onrender.com
     const prodUrl = String.fromEnvironment('API_BASE_URL');
     if (prodUrl.isNotEmpty) return prodUrl;
 
+    // Web without dart-define: assume production Render deployment
+    if (kIsWeb) return 'https://pawfinder-api-gateway.onrender.com';
+
     try {
       if (Platform.isAndroid) return 'http://10.0.2.2:8080';
     } catch (_) {
-      // Platform not available (e.g. web) — fall through
+      // Platform not available — fall through
     }
     return 'http://localhost:8080';
   }
 
   static String get wsUrl {
-    // Production WebSocket URL (derived from API base)
+    // Production override via compile-time environment variable
     const prodUrl = String.fromEnvironment('API_BASE_URL');
     if (prodUrl.isNotEmpty) {
       return prodUrl.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://');
     }
+
+    // Web without dart-define: assume production Render deployment
+    if (kIsWeb) return 'wss://pawfinder-api-gateway.onrender.com/ws';
 
     try {
       if (Platform.isAndroid) return 'ws://10.0.2.2:8080/ws';
