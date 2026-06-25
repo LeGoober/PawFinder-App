@@ -5,12 +5,13 @@ WORKDIR /app
 
 # API base URL — set via Docker build arg (Render sets API_BASE_URL env var in dashboard)
 ARG API_BASE_URL=https://pawfinder-api-gateway.onrender.com
+ARG CACHEBUST=2
 
 COPY pubspec.yaml pubspec.lock* ./
 RUN flutter pub get
 
 COPY . .
-RUN flutter build web --release --no-tree-shake-icons --dart-define=API_BASE_URL=$API_BASE_URL
+RUN echo "Building with API_BASE_URL=$API_BASE_URL" && flutter build web --release --no-tree-shake-icons --dart-define=API_BASE_URL=$API_BASE_URL
 
 # ── Stage 2: Serve with Nginx ────────────────────────────────
 FROM nginx:1.27-alpine
