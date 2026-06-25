@@ -2,11 +2,15 @@
 FROM ghcr.io/cirruslabs/flutter:3.41.6 AS build
 
 WORKDIR /app
+
+# API base URL — set via Docker build arg (Render sets API_BASE_URL env var in dashboard)
+ARG API_BASE_URL=https://pawfinder-api-gateway.onrender.com
+
 COPY pubspec.yaml pubspec.lock* ./
 RUN flutter pub get
 
 COPY . .
-RUN flutter build web --release --no-tree-shake-icons
+RUN flutter build web --release --no-tree-shake-icons --dart-define=API_BASE_URL=$API_BASE_URL
 
 # ── Stage 2: Serve with Nginx ────────────────────────────────
 FROM nginx:1.27-alpine
