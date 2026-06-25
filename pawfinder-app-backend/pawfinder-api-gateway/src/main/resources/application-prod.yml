@@ -9,16 +9,11 @@ spring:
   cloud:
     gateway:
       routes:
-        # Auth Service
+        # Auth Service (V0.1: no rate limiting — Redis unreachable from Render)
         - id: auth-service
           uri: ${AUTH_SERVICE_URL:http://localhost:8081}
           predicates:
             - Path=/api/v1/auth/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
 
         # Alert Service (core — alerts, sightings, pets)
         - id: alert-service
