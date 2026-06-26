@@ -28,14 +28,26 @@ class ApiConstants {
     return 'http://localhost:8080';
   }
 
+  /// Returns the correct WebSocket URL depending on platform and environment.
+  ///
+  /// - Production: uses `WS_URL` dart-define (set at build time)
+  /// - Web without dart-define: derives from REST baseUrl
+  /// - Android emulator: uses `10.0.2.2` to reach host localhost
+  /// - All other platforms: uses localhost directly
   static String get wsUrl {
     // Production override via compile-time environment variable
-    const prodUrl = String.fromEnvironment('API_BASE_URL');
-    if (prodUrl.isNotEmpty) {
-      return prodUrl.replaceFirst('https://', 'wss://').replaceFirst('http://', 'ws://');
+    const prodWsUrl = String.fromEnvironment('WS_URL');
+    if (prodWsUrl.isNotEmpty) return prodWsUrl;
+
+    // Fall back to deriving from REST base URL (strip http(s), prefix ws(s))
+    final rest = baseUrl;
+    if (rest.startsWith('https://')) {
+      return '${rest.replaceFirst('https://', 'wss://')}/ws';
+    }
+    if (rest.startsWith('http://')) {
+      return '${rest.replaceFirst('http://', 'ws://')}/ws';
     }
 
-    // Web without dart-define: assume production Render deployment
     if (kIsWeb) return 'wss://pawfinder-api-gateway.onrender.com/ws';
 
     try {
