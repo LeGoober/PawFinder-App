@@ -3,24 +3,8 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 
 import '../core/constants/api_constants.dart';
-
-/// Google Sign-In user data returned after a successful sign-in.
-class GoogleSignInUser {
-  final String id;
-  final String email;
-  final String? displayName;
-  final String? photoUrl;
-
-  const GoogleSignInUser({
-    required this.id,
-    required this.email,
-    this.displayName,
-    this.photoUrl,
-  });
-}
 
 class AuthService {
   static const _tokenKey = 'auth_token';
@@ -31,49 +15,13 @@ class AuthService {
   final StreamController<bool> _authStateController =
       StreamController<bool>.broadcast();
 
-  // Google Sign-In instance — configured for web + mobile
-  late final GoogleSignIn _googleSignIn;
-
-  AuthService() : _storage = const FlutterSecureStorage() {
-    _googleSignIn = GoogleSignIn(
-      scopes: ['email', 'profile'],
-    );
-  }
+  AuthService() : _storage = const FlutterSecureStorage();
 
   /// Initialize the service.
   Future<void> initialize() async {}
 
-  // ── Google Sign-In ──────────────────────────────────────────────
-
-  /// Starts the Google Sign-In flow. Returns user data on success,
-  /// or null if the user cancelled.
-  Future<GoogleSignInUser?> signInWithGoogle() async {
-    try {
-      final account = await _googleSignIn.signIn();
-      if (account == null) return null;
-
-      // Re-authenticate to get fresh credentials with ID token
-      final auth = await account.authentication;
-
-      return GoogleSignInUser(
-        id: account.id,
-        email: account.email,
-        displayName: account.displayName,
-        photoUrl: account.photoUrl,
-      );
-    } catch (e) {
-      // User cancelled or network error — rethrow for the cubit to handle
-      rethrow;
-    }
-  }
-
-  /// Signs out of Google and clears local auth state.
+  /// Signs out — clears all stored tokens and cached user profile.
   Future<void> signOut() async {
-    try {
-      await _googleSignIn.signOut();
-    } catch (_) {
-      // Best-effort — may fail if already signed out
-    }
     await deleteToken();
   }
 
@@ -118,7 +66,7 @@ class AuthService {
       final response = await dio.post(
         ApiConstants.refresh,
         options: Options(headers: {
-          'Authorization': 'Bearer $refresh',
+          'Authorization': '***',
         }),
       );
 
