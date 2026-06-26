@@ -19,6 +19,10 @@ public class CorsConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "capacitor://localhost",
+                // All pawfinder-frontend Render deploy URLs (suffix changes on redeploy)
+                "https://pawfinder-frontend-*.onrender.com",
+                // Explicit current deployments (belt + suspenders)
+                "https://pawfinder-frontend-8w8a.onrender.com",
                 "https://pawfinder-frontend-juem.onrender.com"
         ));
         corsConfig.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
