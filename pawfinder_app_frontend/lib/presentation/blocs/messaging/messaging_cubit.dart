@@ -27,6 +27,9 @@ class MessagingCubit extends Cubit<MessagingState> {
   String? _currentUserId;
   String? _activeConversationId;
 
+  /// Public getter for UI to determine message ownership.
+  String? get currentUserId => _currentUserId;
+
   /// Set the current user ID for owner detection.
   void setCurrentUserId(String userId) {
     _currentUserId = userId;

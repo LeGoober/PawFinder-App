@@ -294,7 +294,7 @@ class _MessagingPageState extends State<MessagingPage> {
           itemCount: messages.length,
           itemBuilder: (context, index) {
             final msg = messages[index];
-            final isOwner = msg.senderId == _cubit._currentUserId;
+            final isOwner = msg.senderId == _cubit.currentUserId;
 
             // Show date separator for first message or when date changes
             final showDate = index == 0 ||
