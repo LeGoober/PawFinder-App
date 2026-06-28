@@ -5,7 +5,7 @@ import 'package:equatable/equatable.dart';
 import 'package:pawfinder_app/domain/entities/message.dart';
 import 'package:pawfinder_app/domain/entities/conversation.dart';
 import 'package:pawfinder_app/domain/repositories/conversation_repository.dart';
-import 'package:pawfinder_app/services/websocket_service.dart';
+import 'package:pawfinder_app/services/websocket_service.dart' show WebSocketService, WsConnectionState;
 
 part 'messaging_state.dart';
 
@@ -61,11 +61,11 @@ class MessagingCubit extends Cubit<MessagingState> {
     await _wsService!.connect();
   }
 
-  ConnectionStatus _mapWsState(services.ConnectionState s) {
+  ConnectionStatus _mapWsState(WsConnectionState s) {
     switch (s) {
-      case services.ConnectionState.connected:
+      case WsConnectionState.connected:
         return ConnectionStatus.connected;
-      case services.ConnectionState.connecting:
+      case WsConnectionState.connecting:
         return ConnectionStatus.connecting;
       default:
         return ConnectionStatus.disconnected;

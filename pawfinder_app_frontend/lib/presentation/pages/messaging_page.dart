@@ -8,7 +8,6 @@ import '../../di/injection.dart';
 import '../../domain/entities/message.dart';
 import '../../services/websocket_service.dart';
 import '../blocs/messaging/messaging_cubit.dart';
-import '../blocs/messaging/messaging_state.dart';
 import '../widgets/info_banner.dart';
 import '../widgets/skeleton_loader.dart';
 
@@ -234,7 +233,7 @@ class _MessagingPageState extends State<MessagingPage> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 16),
-      color: AppColors.warning.withValues(alpha: 0.1),
+      color: AppColors.reward.withValues(alpha: 0.1),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -247,7 +246,7 @@ class _MessagingPageState extends State<MessagingPage> {
           if (status == ConnectionStatus.connecting) const SizedBox(width: 8),
           Text(
             text,
-            style: AppTypography.caption.copyWith(color: AppColors.warning),
+            style: AppTypography.caption.copyWith(color: AppColors.reward),
           ),
         ],
       ),

@@ -16,9 +16,10 @@ class WebSocketService {
   final _messageController = StreamController<Map<String, dynamic>>.broadcast();
   final _typingController = StreamController<Map<String, dynamic>>.broadcast();
   final _presenceController = StreamController<Map<String, dynamic>>.broadcast();
-  final _connectionController = StreamController<ConnectionState>.broadcast();
+  final _connectionController = StreamController<WsConnectionState>.broadcast();
 
   final Set<String> _activeSubscriptions = {};
+  final Map<String, StompUnsubscribe> _subscriptionHandles = {};
   String? _currentConversationId;
   Timer? _typingTimer;
   bool _isTyping = false;
@@ -37,11 +38,10 @@ class WebSocketService {
       _presenceController.stream;
 
   /// Stream of WebSocket connection state changes.
-  Stream<ConnectionState> get connectionState =>
+  Stream<WsConnectionState> get connectionState =>
       _connectionController.stream;
 
-  bool get isConnected =>
-      _client?.connected ?? false;
+  bool get isConnected => _client?.connected ?? false;
 
   /// Connect to the messaging WebSocket and authenticate.
   Future<void> connect() async {
@@ -49,7 +49,7 @@ class WebSocketService {
 
     final token = await _authService.getToken();
     if (token == null || token.isEmpty) {
-      _connectionController.add(ConnectionState.disconnected);
+      _connectionController.add(WsConnectionState.disconnected);
       return;
     }
 
@@ -57,15 +57,16 @@ class WebSocketService {
       config: StompConfig(
         url: ApiConstants.wsUrl,
         onConnect: _onConnect,
-        onDisconnect: (_) => _connectionController.add(ConnectionState.disconnected),
+        onDisconnect: (_) =>
+            _connectionController.add(WsConnectionState.disconnected),
         onWebSocketError: (error) {
-          _connectionController.add(ConnectionState.error);
+          _connectionController.add(WsConnectionState.error);
         },
         stompConnectHeaders: {
-          'Authorization': 'Bearer $token',
+          'Authorization': '***',
         },
-        heartbeatOutgoing: const Duration(seconds: 10).inMilliseconds,
-        heartbeatIncoming: const Duration(seconds: 10).inMilliseconds,
+        heartbeatOutgoing: const Duration(seconds: 10),
+        heartbeatIncoming: const Duration(seconds: 10),
         reconnectDelay: const Duration(seconds: 3),
       ),
     );
@@ -74,7 +75,7 @@ class WebSocketService {
   }
 
   void _onConnect(StompFrame frame) {
-    _connectionController.add(ConnectionState.connected);
+    _connectionController.add(WsConnectionState.connected);
 
     // Subscribe to user-specific private messages
     _subscribe('/user/queue/messages');
@@ -88,10 +89,7 @@ class WebSocketService {
     _currentConversationId = conversationId;
     _activeSubscriptions.add(conversationId);
 
-    // Subscribe to conversation messages
     _subscribe('/topic/conversation.$conversationId');
-
-    // Subscribe to typing indicators for this conversation
     _subscribe('/topic/conversation.$conversationId.typing');
   }
 
@@ -99,9 +97,8 @@ class WebSocketService {
   void unsubscribeFromConversation(String conversationId) {
     if (!_activeSubscriptions.contains(conversationId)) return;
 
-    _client?.unsubscribe(destination: '/topic/conversation.$conversationId');
-    _client?.unsubscribe(
-        destination: '/topic/conversation.$conversationId.typing');
+    _unsubscribe('/topic/conversation.$conversationId');
+    _unsubscribe('/topic/conversation.$conversationId.typing');
     _activeSubscriptions.remove(conversationId);
 
     if (_currentConversationId == conversationId) {
@@ -110,7 +107,7 @@ class WebSocketService {
   }
 
   void _subscribe(String destination) {
-    _client?.subscribe(
+    final sub = _client?.subscribe(
       destination: destination,
       callback: (StompFrame frame) {
         if (frame.body == null) return;
@@ -122,6 +119,16 @@ class WebSocketService {
         }
       },
     );
+    if (sub != null) {
+      _subscriptionHandles[destination] = sub;
+    }
+  }
+
+  void _unsubscribe(String destination) {
+    final handle = _subscriptionHandles.remove(destination);
+    if (handle != null) {
+      handle();
+    }
   }
 
   void _routeMessage(String destination, Map<String, dynamic> data) {
@@ -157,9 +164,9 @@ class WebSocketService {
   /// Send a typing indicator.
   void sendTypingIndicator(String conversationId, bool isTyping) {
     if (_client?.connected != true) return;
-    if (this._isTyping == isTyping) return;
+    if (_isTyping == isTyping) return;
 
-    this._isTyping = isTyping;
+    _isTyping = isTyping;
     _client!.send(
       destination: '/app/chat.typing/$conversationId',
       body: jsonEncode({'typing': isTyping}),
@@ -207,11 +214,15 @@ class WebSocketService {
   /// Disconnect from WebSocket.
   Future<void> disconnect() async {
     _typingTimer?.cancel();
+    for (final handle in _subscriptionHandles.values) {
+      handle();
+    }
+    _subscriptionHandles.clear();
     _activeSubscriptions.clear();
     _currentConversationId = null;
     _client?.deactivate();
     _client = null;
-    _connectionController.add(ConnectionState.disconnected);
+    _connectionController.add(WsConnectionState.disconnected);
   }
 
   /// Clean up resources.
@@ -224,4 +235,4 @@ class WebSocketService {
   }
 }
 
-enum ConnectionState { connected, disconnected, error, connecting }
+enum WsConnectionState { connected, disconnected, error, connecting }
