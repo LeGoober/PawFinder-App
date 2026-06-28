@@ -22,17 +22,25 @@ class MessageModel extends Equatable {
   });
 
   /// Creates a [MessageModel] from a JSON map.
-  factory MessageModel.fromJson(Map<String, dynamic> json) => MessageModel(
-        id: json['id'] as String,
-        conversationId: json['conversationId'] as String,
-        senderId: json['senderId'] as String,
-        content: json['content'] as String,
-        contentType: json['contentType'] as String? ?? 'text',
-        createdAt: DateTime.parse(json['createdAt'] as String),
-        readAt: json['readAt'] != null
-            ? DateTime.parse(json['readAt'] as String)
-            : null,
-      );
+  factory MessageModel.fromJson(Map<String, dynamic> json) {
+    // Guard against empty fallback responses
+    if (!json.containsKey('id') || json['id'] == null) {
+      throw FormatException('MessageModel.fromJson: missing required field "id"');
+    }
+    return MessageModel(
+      id: json['id'] as String,
+      conversationId: (json['conversationId'] ?? '') as String,
+      senderId: (json['senderId'] ?? '') as String,
+      content: (json['content'] ?? '') as String,
+      contentType: json['contentType'] as String? ?? 'text',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+      readAt: json['readAt'] != null
+          ? DateTime.tryParse(json['readAt'].toString())
+          : null,
+    );
+  }
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {

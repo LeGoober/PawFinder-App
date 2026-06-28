@@ -26,11 +26,29 @@ class ConversationsLoaded extends MessagingState {
 
 class MessagesLoaded extends MessagingState {
   final List<Message> messages;
+  final ConnectionStatus connectionStatus;
+  final bool isRecipientTyping;
 
-  const MessagesLoaded({required this.messages});
+  const MessagesLoaded({
+    required this.messages,
+    this.connectionStatus = ConnectionStatus.disconnected,
+    this.isRecipientTyping = false,
+  });
+
+  MessagesLoaded copyWith({
+    List<Message>? messages,
+    ConnectionStatus? connectionStatus,
+    bool? isRecipientTyping,
+  }) {
+    return MessagesLoaded(
+      messages: messages ?? this.messages,
+      connectionStatus: connectionStatus ?? this.connectionStatus,
+      isRecipientTyping: isRecipientTyping ?? this.isRecipientTyping,
+    );
+  }
 
   @override
-  List<Object?> get props => [messages];
+  List<Object?> get props => [messages, connectionStatus, isRecipientTyping];
 }
 
 class MessageSent extends MessagingState {
@@ -50,3 +68,5 @@ class MessagingError extends MessagingState {
   @override
   List<Object?> get props => [message];
 }
+
+enum ConnectionStatus { connected, disconnected, connecting }

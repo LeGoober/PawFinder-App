@@ -9,102 +9,87 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Lightweight fallback controller for service endpoints whose downstream
- * microservices haven't been provisioned on Render yet.
+ * Circuit-breaker fallback controller for downstream microservice failures.
  * <p>
- * Returns empty/safe responses instead of 500 Internal Server Error
- * so the Flutter frontend doesn't crash with loading skeletons.
+ * Only serves {@code /fallback/**} paths — triggered exclusively by
+ * Spring Cloud Gateway's {@code circuitBreaker} filter when a downstream
+ * service is unreachable or timing out.
  * <p>
- * Registered at {@code @Order(0)} via {@code RequestMappingHandlerMapping},
- * which takes precedence over Spring Cloud Gateway routes ({@code @Order(1)}).
+ * IMPORTANT: This controller must NEVER map to {@code /api/v1/**} paths.
+ * Doing so causes Spring MVC ({@code @Order(0)}) to intercept requests
+ * before Gateway routes ({@code @Order(1)}), returning empty responses
+ * that crash the Flutter frontend with null type errors.
  */
 @RestController
+@RequestMapping("/fallback")
 public class FallbackController {
 
-    // ═══════════════════════════════════════════════════════
-    // Alerts
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/alerts")
-    public ResponseEntity<List<Map<String, Object>>> getAlerts() {
-        return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/auth")
+    public ResponseEntity<Map<String, Object>> authFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Auth service is temporarily unavailable. Please try again in a moment."
+        ));
     }
 
-    @GetMapping("/api/v1/alerts/nearby")
-    public ResponseEntity<List<Map<String, Object>>> getNearbyAlerts(
-            @RequestParam(required = false) Double lat,
-            @RequestParam(required = false) Double lng,
-            @RequestParam(required = false) Double radiusKm) {
-        return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/alert")
+    public ResponseEntity<Map<String, Object>> alertFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Alert service is temporarily unavailable."
+        ));
     }
 
-    @PostMapping("/api/v1/alerts")
-    public ResponseEntity<Map<String, Object>> createAlert(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(new HashMap<>());
+    @GetMapping("/sighting")
+    public ResponseEntity<Map<String, Object>> sightingFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Sighting service is temporarily unavailable."
+        ));
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Pets
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/pets")
-    public ResponseEntity<List<Map<String, Object>>> getPets() {
-        return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/pet")
+    public ResponseEntity<Map<String, Object>> petFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Pet service is temporarily unavailable."
+        ));
     }
 
-    @PostMapping("/api/v1/pets")
-    public ResponseEntity<Map<String, Object>> createPet(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(new HashMap<>());
+    @GetMapping("/conversation")
+    public ResponseEntity<Map<String, Object>> conversationFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Messaging service is temporarily unavailable."
+        ));
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Sightings
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/sightings")
-    public ResponseEntity<List<Map<String, Object>>> getSightings() {
-        return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/message")
+    public ResponseEntity<Map<String, Object>> messageFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Messaging service is temporarily unavailable."
+        ));
     }
 
-    @PostMapping("/api/v1/sightings")
-    public ResponseEntity<Map<String, Object>> reportSighting(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(new HashMap<>());
+    @GetMapping("/reward")
+    public ResponseEntity<Map<String, Object>> rewardFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Reward service is not yet available."
+        ));
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Conversations
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/conversations")
-    public ResponseEntity<List<Map<String, Object>>> getConversations() {
-        return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/media")
+    public ResponseEntity<Map<String, Object>> mediaFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "Media service is not yet available."
+        ));
     }
 
-    @PostMapping("/api/v1/conversations")
-    public ResponseEntity<Map<String, Object>> startConversation(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(new HashMap<>());
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // Messages
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/messages")
-    public ResponseEntity<List<Map<String, Object>>> getMessages() {
-        return ResponseEntity.ok(Collections.emptyList());
-    }
-
-    @PostMapping("/api/v1/messages")
-    public ResponseEntity<Map<String, Object>> sendMessage(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(new HashMap<>());
-    }
-
-    // ═══════════════════════════════════════════════════════
-    // Dashboard / Leaderboard / Badges
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/dashboard/metrics")
-    public ResponseEntity<Map<String, Object>> getDashboardMetrics() {
+    @GetMapping("/dashboard")
+    public ResponseEntity<Map<String, Object>> dashboardFallback() {
         return ResponseEntity.ok(Map.of(
                 "activeAlerts", 0,
                 "petsFound", 0,
@@ -113,42 +98,21 @@ public class FallbackController {
         ));
     }
 
-    @GetMapping("/api/v1/leaderboard")
-    public ResponseEntity<List<Map<String, Object>>> getLeaderboard() {
+    @GetMapping("/leaderboard")
+    public ResponseEntity<List<Map<String, Object>>> leaderboardFallback() {
         return ResponseEntity.ok(Collections.emptyList());
     }
 
-    @GetMapping("/api/v1/badges")
-    public ResponseEntity<List<Map<String, Object>>> getBadges() {
+    @GetMapping("/badge")
+    public ResponseEntity<List<Map<String, Object>>> badgeFallback() {
         return ResponseEntity.ok(Collections.emptyList());
     }
 
-    // ═══════════════════════════════════════════════════════
-    // Rewards / Media / Matching / Notifications
-    // ═══════════════════════════════════════════════════════
-
-    @GetMapping("/api/v1/rewards")
-    public ResponseEntity<List<Map<String, Object>>> getRewards() {
-        return ResponseEntity.ok(Collections.emptyList());
-    }
-
-    @PostMapping("/api/v1/rewards")
-    public ResponseEntity<Map<String, Object>> createReward(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(new HashMap<>());
-    }
-
-    @PostMapping("/api/v1/media/upload")
-    public ResponseEntity<Map<String, Object>> uploadMedia(@RequestBody(required = false) Map<String, Object> body) {
-        return ResponseEntity.ok(Map.of("url", ""));
-    }
-
-    @GetMapping("/api/v1/matching")
-    public ResponseEntity<List<Map<String, Object>>> getMatches() {
-        return ResponseEntity.ok(Collections.emptyList());
-    }
-
-    @GetMapping("/api/v1/notifications")
-    public ResponseEntity<List<Map<String, Object>>> getNotifications() {
-        return ResponseEntity.ok(Collections.emptyList());
+    @GetMapping("/ws")
+    public ResponseEntity<Map<String, Object>> wsFallback() {
+        return ResponseEntity.status(503).body(Map.of(
+                "error", "service_unavailable",
+                "message", "WebSocket service is temporarily unavailable."
+        ));
     }
 }

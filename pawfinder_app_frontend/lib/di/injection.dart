@@ -15,6 +15,7 @@ import 'package:pawfinder_app/services/analytics_service.dart';
 import 'package:pawfinder_app/services/auth_service.dart';
 import 'package:pawfinder_app/services/location_service.dart';
 import 'package:pawfinder_app/services/notification_service.dart';
+import 'package:pawfinder_app/services/websocket_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -27,6 +28,9 @@ Future<void> configureDependencies() async {
   getIt.registerLazySingleton<LocationService>(() => LocationService());
   getIt.registerLazySingleton<NotificationService>(() => NotificationService());
   getIt.registerLazySingleton<AnalyticsService>(() => AnalyticsService());
+  getIt.registerLazySingleton<WebSocketService>(
+    () => WebSocketService(authService: getIt<AuthService>()),
+  );
 
   // Data sources
   getIt.registerLazySingleton<ApiClient>(

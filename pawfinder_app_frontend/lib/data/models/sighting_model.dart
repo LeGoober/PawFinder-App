@@ -26,21 +26,33 @@ class SightingModel extends Equatable {
   });
 
   /// Creates a [SightingModel] from a JSON map.
-  factory SightingModel.fromJson(Map<String, dynamic> json) =>
-      SightingModel(
-        id: json['id'] as String,
-        alertId: json['alertId'] as String,
-        finderId: json['finderId'] as String,
-        fuzzedLat: (json['fuzzedLat'] as num).toDouble(),
-        fuzzedLng: (json['fuzzedLng'] as num).toDouble(),
-        photoUrls: (json['photoUrls'] as List<dynamic>?)
-                ?.map((e) => e as String)
-                .toList() ??
-            [],
-        notes: json['notes'] as String?,
-        status: json['status'] as String? ?? 'pending',
-        createdAt: DateTime.parse(json['createdAt'] as String),
-      );
+  /// Returns null if the JSON is missing critical fields (e.g., empty fallback response).
+  factory SightingModel.fromJson(Map<String, dynamic> json) {
+    // Guard against empty fallback responses
+    if (!json.containsKey('id') || json['id'] == null) {
+      throw FormatException('SightingModel.fromJson: missing required field "id"');
+    }
+    return SightingModel(
+      id: json['id'] as String,
+      alertId: (json['alertId'] ?? '') as String,
+      finderId: (json['finderId'] ?? '') as String,
+      fuzzedLat: (json['fuzzedLat'] ?? json['latitude'] ?? 0.0) is num
+          ? (json['fuzzedLat'] ?? json['latitude'] as num).toDouble()
+          : 0.0,
+      fuzzedLng: (json['fuzzedLng'] ?? json['longitude'] ?? 0.0) is num
+          ? (json['fuzzedLng'] ?? json['longitude'] as num).toDouble()
+          : 0.0,
+      photoUrls: (json['photoUrls'] as List<dynamic>?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          [],
+      notes: json['notes'] as String?,
+      status: (json['status'] as String?) ?? 'pending',
+      createdAt: json['createdAt'] != null
+          ? DateTime.tryParse(json['createdAt'].toString()) ?? DateTime.now()
+          : DateTime.now(),
+    );
+  }
 
   /// Converts this model to a JSON map.
   Map<String, dynamic> toJson() => {
