@@ -123,4 +123,30 @@ class AuthCubit extends Cubit<AuthState> {
       );
     } catch (_) {}
   }
+
+  // ── Phone auth stubs (removed — kept for build compat) ──────────
+
+  /// Phone verification is no longer supported (email/password auth only).
+  @Deprecated('Phone auth removed. Use email/password sign-in.')
+  Future<void> verifyCode(String phoneNumber, String code) async {
+    emit(AuthError(
+      message: 'Phone verification is no longer supported. '
+          'Please use email/password to sign in.',
+    ));
+  }
+
+  /// Phone registration is no longer supported (email/password auth only).
+  @Deprecated('Phone auth removed. Use email/password sign-up.')
+  Future<void> register(String phoneNumber) async {
+    emit(AuthError(
+      message: 'Phone registration is no longer supported. '
+          'Please use email/password to sign up.',
+    ));
+  }
+
+  /// Navigate back to phone entry (no-op — phone auth removed).
+  @Deprecated('Phone auth removed.')
+  void backToPhone() {
+    clearError();
+  }
 }

@@ -63,7 +63,7 @@ class WebSocketService {
           _connectionController.add(WsConnectionState.error);
         },
         stompConnectHeaders: {
-          'Authorization': '***',
+          'Authorization': 'Bearer $token',
         },
         heartbeatOutgoing: const Duration(seconds: 10),
         heartbeatIncoming: const Duration(seconds: 10),

@@ -41,15 +41,15 @@ class MessagingCubit extends Cubit<MessagingState> {
 
     // Listen for incoming messages
     _messageSub?.cancel();
-    _messageSub = _wsService!.messages.listen(_onIncomingMessage);
+    _messageSub = _wsService.messages.listen(_onIncomingMessage);
 
     // Listen for typing indicators
     _typingSub?.cancel();
-    _typingSub = _wsService!.typingEvents.listen(_onTypingEvent);
+    _typingSub = _wsService.typingEvents.listen(_onTypingEvent);
 
     // Listen for connection state changes
     _presenceSub?.cancel();
-    _presenceSub = _wsService!.connectionState.listen((wsState) {
+    _presenceSub = _wsService.connectionState.listen((wsState) {
       if (state is MessagesLoaded) {
         final current = state as MessagesLoaded;
         emit(current.copyWith(
@@ -58,7 +58,7 @@ class MessagingCubit extends Cubit<MessagingState> {
       }
     });
 
-    await _wsService!.connect();
+    await _wsService.connect();
   }
 
   ConnectionStatus _mapWsState(WsConnectionState s) {
